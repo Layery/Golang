@@ -58,7 +58,8 @@ func main() {
 	// 利用构造函数, 获取一个person结构体
 	// 相当于PHP的new Object("llf", 30)
 
-	man := newPerson("llf", 30)
+	//man := newPerson("llf", 30)
+	man := new(Person)
 	fmt.Printf("man 的类型是一个指针 %T \n", man)
 	// 接下来, 调用我们的say方法, 由于构造函数返回的是一个指针
 	// 所以我们需要先取到指针的值, 再调用say方法
