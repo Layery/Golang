@@ -11,7 +11,7 @@ Golang 中结构体字段的可见性 && json序列化
 
 // 声明一个结构体
 type Person struct {
-	name string
+	Name string
 	age  int8
 }
 
@@ -26,14 +26,15 @@ type student Person
 func main() {
 
 	var zhangsan = new(Person)
-	fmt.Printf("%#v", zhangsan)
+	fmt.Printf("%#v \n", zhangsan)
 
 	// 创建一个小明
 	xiaoming := student{
-		name: "小明",
-		age:  30,
+		Name: "小明",  // 由于Name字段首字母大写, 所以Name字段可以被json包读取到
+		age:  30, // 由于age字段不是首字母大写, 所以age字段不会被json包读取到
 	}
-	fmt.Printf("%#v \n\n", xiaoming)
+	fmt.Printf("main包自己本身可以读取得到age字段 %#v \n\n", xiaoming)
+
 
 	// 将小明格式化成json
 	data, err := json.Marshal(xiaoming)
@@ -41,6 +42,9 @@ func main() {
 		fmt.Printf("found an err %v", err)
 		return
 	}
-	fmt.Printf("json is %#v", data)
+	fmt.Printf("json包读取不到age字段%#s", data)
+
+
+	fmt.Printf("%v", tempconv.AbsoluteZeroC)
 
 }
