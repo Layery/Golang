@@ -10,8 +10,12 @@ type PersonModel struct {
 	age        int8
 }
 
-func getOlder(p1 PersonModel) (PersonModel, int8) {
-	return p1, p1.age
+func getOlder(p1 PersonModel, p2 PersonModel) (int8, PersonModel) {
+	if p1.age > p2.age {
+		return p1.age, p1
+	} else {
+		return p2.age, p2
+	}
 }
 
 /**
@@ -30,7 +34,7 @@ func main() {
 	var zhangsan PersonModel
 	zhangsan.name = "张三"
 	zhangsan.addr = "北京"
-	zhangsan.age = 127
+	zhangsan.age = 126
 	fmt.Println(zhangsan)
 
 	// 第2种声明方式, 顺序必须和声明时的顺序一致
@@ -38,7 +42,7 @@ func main() {
 	fmt.Println(wangwu)
 	// 第3种方式, 可以自定义顺序
 	zhaoliu := PersonModel{
-		age:  80,
+		age:  127,
 		name: "赵六",
 		addr: "龙门客栈",
 	}
@@ -51,8 +55,8 @@ func main() {
 	}
 	fmt.Println(lisi)
 
-	rs, age := getOlder(zhangsan)
-	fmt.Printf("result = %v, age = %d \n\n", rs, age)
+	age, res := getOlder(zhangsan, zhaoliu)
+	fmt.Printf("%v的年龄大, 他%d岁了 \n", res.name, age)
 
 	// go的struct 类似于PHP的class, 但是go里没有构造函数的概念
 	// go里通过函数去给结构体声明一个构造函数, 并约定成俗的使用new前缀命名函数

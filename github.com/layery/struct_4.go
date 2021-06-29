@@ -11,8 +11,11 @@ Golang 中结构体字段的可见性 && json序列化
 
 // 声明一个结构体
 type Person struct {
-	Name string
-	age  int8
+	Name    string
+	age     int8
+	Address string `json:"local, int"`    // 表示用local代替原始的Address的字段名
+	sex     int8   `json:-`               // 表示对该字段不进行序列化
+	Email   string `json:email,omitempty` // 由于Go中字段首字母大写, 代表外部可访问的变量, 也可以是使用json TAG 更加定制化的生成json格式数据
 }
 
 /**
@@ -30,11 +33,13 @@ func main() {
 
 	// 创建一个小明
 	xiaoming := student{
-		Name: "小明",  // 由于Name字段首字母大写, 所以Name字段可以被json包读取到
-		age:  30, // 由于age字段不是首字母大写, 所以age字段不会被json包读取到
+		Name:    "小明", // 由于Name字段首字母大写, 所以Name字段可以被json包读取到
+		age:     30,   // 由于age字段不是首字母大写, 所以age字段不会被json包读取到
+		Address: "",
+		sex:     2,
+		Email:   "www.baidu.com",
 	}
 	fmt.Printf("main包自己本身可以读取得到age字段 %#v \n\n", xiaoming)
-
 
 	// 将小明格式化成json
 	data, err := json.Marshal(xiaoming)
@@ -43,8 +48,4 @@ func main() {
 		return
 	}
 	fmt.Printf("json包读取不到age字段%#s", data)
-
-
-	fmt.Printf("%v", tempconv.AbsoluteZeroC)
-
 }
