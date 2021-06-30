@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -27,7 +26,11 @@ func (l *Logger) Log(data interface{}) {
 	fmt.Printf("now data is %v\n", data)
 	for _, writer := range l.writerList {
 		fmt.Printf("now log driver is %#v \n", writer)
-		writer.Log(data)
+		err := writer.Log(data)
+		if err != nil {
+			panic(err)
+		}
+
 	}
 }
 
@@ -49,35 +52,43 @@ type fileWriter struct {
 // 文件写入器, 实现LogWriter的Log方法
 func (f *fileWriter) Log(data interface{}) error {
 	if f.file == nil { // 日志文件没有准备好
-		return errors.New("log files not created")
+		return errors.New("日志文件没有准备好")
 	}
+	fmt.Printf("调用filewriter的Log方法, data值: %v \n", data)
 	// 将数据序列化成字符串
-	logStr, err := json.Marshal(data)
-	if err == nil {
-		return errors.New("JSON has errored")
-	}
-	return f.Log(logStr)
+	logStr := fmt.Sprintf("%v\n", data)
+
+	// 将数据以字节数组放入文件中
+	_, err := f.file.Write([]byte(logStr))
+	return err
 }
 
 // 文件写入器需要设置一个log文件
-func (f *fileWriter) SetFile(filename string) *fileWriter {
+func (f *fileWriter) SetFile(filename string) (*fileWriter, error) {
 	// 如果文件已经打开了, 关了它
-	if f.file != nil { // 已经被打开了, f.file就不是nil了
+	if f.file != nil {
+		fmt.Printf("这个文件已经被打开了")
 		f.file.Close()
 	}
-	fmt.Printf("当前设置的文件是%#v, f.file is %#v \n", filename, f.file)
 	// 打开一个文件句柄
-	f.file, _ = os.Create(filename)
+	createResult, err := os.Create(filename)
+	fmt.Printf("===========>  createResult %#v \n", createResult)
+	fmt.Printf("===========>  createResult type %T \n", createResult)
+	if err != nil {
+		fmt.Printf("文件打开失败%#v", err)
+	}
+	fmt.Printf("当前设置的文件是%#v, f.file is %#v \n", filename, f.file)
+	f.file = createResult
 
-	// fmt.Printf("打开文件出错了filename: %v, err: %#v \n", filename, err)
-
-	return f
+	return f, err
 }
 
 // 文件写入器的构造函数
 func NewFileWriter() *fileWriter {
 	return &fileWriter{}
 }
+
+/////////////////////////////////////////////////////////
 
 func main() {
 
@@ -93,14 +104,14 @@ func main() {
 
 	// 2. 创建文件写入器
 	fileWriter := NewFileWriter()
-	fileWriter.SetFile("./debug.log")
+	writer, _ := fileWriter.SetFile("./src/log/debug.log")
+
+	fmt.Printf("设置好了filename, writer: %#v\n writer 的类型是%T \n", writer, writer)
 
 	// 3. 给日志器logger注册一个文件写入器
-	logger.RegisterWriter(fileWriter)
-
-	fmt.Printf("%#v \n", logger)
+	logger.RegisterWriter(writer)
 
 	// 4. 输出一个日志
-	logger.Log("layery")
+	logger.Log("这是我输出的一个日志")
 
 }
