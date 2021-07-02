@@ -1,10 +1,13 @@
-package main
+package logger
 
 import (
 	"errors"
 	"fmt"
 	"os"
 )
+
+
+const LogStatus = 1
 
 // 声明一个日志写入器的接口
 type LogWriter interface {
@@ -28,7 +31,7 @@ func (l *Logger) Log(data interface{}) {
 		fmt.Printf("now log driver is %#v \n", writer)
 		err := writer.Log(data)
 		if err != nil {
-			panic(err)
+			panic(err.Error())
 		}
 
 	}
@@ -67,17 +70,16 @@ func (f *fileWriter) Log(data interface{}) error {
 func (f *fileWriter) SetFile(filename string) (*fileWriter, error) {
 	// 如果文件已经打开了, 关了它
 	if f.file != nil {
-		fmt.Printf("这个文件已经被打开了")
-		f.file.Close()
+		fmt.Printf("这个文件已经被打开了 \n")
 	}
 	// 打开一个文件句柄
 	createResult, err := os.Create(filename)
 	fmt.Printf("===========>  createResult %#v \n", createResult)
 	fmt.Printf("===========>  createResult type %T \n", createResult)
 	if err != nil {
-		fmt.Printf("文件打开失败%#v", err)
+		fmt.Printf("文件打开失败%#v \n", err.Error())
 	}
-	fmt.Printf("当前设置的文件是%#v, f.file is %#v \n", filename, f.file)
+	fmt.Printf("当前设置的文件是%#v \n, f.file is %#v \n", filename, f.file)
 	f.file = createResult
 
 	return f, err
@@ -104,7 +106,7 @@ func main() {
 
 	// 2. 创建文件写入器
 	fileWriter := NewFileWriter()
-	writer, _ := fileWriter.SetFile("./src/log/debug.log")
+	writer, _ := fileWriter.SetFile("/log/debug.log")
 
 	fmt.Printf("设置好了filename, writer: %#v\n writer 的类型是%T \n", writer, writer)
 
