@@ -16,3 +16,9 @@ func main()  {
 	logger.Out(err)
 	logger.NewLogger().Log("debug")
 }
+
+
+/**
+	Golang 1.13开始, go mod 的模块管理模式, 作为了Go开发的默认的模式,
+	采用go mod init 后, 项目可以不必放在GOPATH/src路径下, 任意一个位置都可以
+ */
