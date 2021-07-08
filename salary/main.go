@@ -77,7 +77,7 @@ func main()  {
 				Name:    "missHours",
 				Aliases: []string{"m"},
 				Value:   0,
-				Usage:   "`missHours` 当月请假的时长, 单位为: 小时, 请假一天即: 24",
+				Usage:   "`missHours` 当月请假的时长, 单位为: 小时, 请假一天即8小时",
 			},
 			&cli.IntFlag{
 				Name:    "forgetSignTimes",
