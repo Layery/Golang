@@ -2,9 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
 	"runtime"
+	"sync"
 	"time"
 )
+
+
+var wg sync.WaitGroup
 
 func testGoroutine()  {
 	i := 0
@@ -30,10 +36,93 @@ func showFunc(ss int) {
 }
 
 
+func SayGreetings(greeting string, times, label int) {
+	for i := 0; i <= times; i++ {
+		//fmt.Printf("%v\n", greeting)
+		//d := time.Second * time.Duration(rand.Intn(5)) / 2
+		d := time.Second * 2
+		log.Println(fmt.Sprintf("label: %d, i: %d, seelp: %d, value: ====>%v", label, i,  d,  greeting))
+		time.Sleep(d) // 随机睡眠0到2.5秒
+	}
+	wg.Done()
+}
+
+func main() {
+
+	myTestFunc4()
+
+	//myTestFunc3()
+	//myTestFunc2()
+	//myTestFunc1()
+
+
+
+}
+
+func myTestFunc4() {
+	var slice []func()
+
+	sli := []int{1, 2, 3, 4, 5}
+	for _, v := range sli {
+		fmt.Println(&v)
+		temp := v
+		slice = append(slice, func(){
+			fmt.Println(temp * temp) // 直接打印结果
+		})
+	}
+
+	for _, val  := range slice {
+		val()
+	}
+	// 输出 25 25 25 25 25
+}
+
+
+
+func myTestFunc3()  {
+	func() {
+		for i := 0; i < 3; i++ {
+			defer fmt.Println("a:", i)
+		}
+	}()
+	fmt.Println()
+	func() {
+		for i := 0; i < 3; i++ {
+			defer func() {
+				fmt.Println("b:", i)
+			}()
+		}
+	}()
+}
+
+
+func myTestFunc2 () {
+	rand.Seed(time.Now().UnixNano())
+	log.SetFlags(0)
+
+	//c := make(chan string)
+
+	// WaitGroup类型有3个方法, Add, Done 和Wait ,
+	// Add 用来注册需要完成的线程数(任务数)
+	// Done 某个线程(任务)执行完后通知主线程
+	// Wait 将会一直阻塞, 知道注册过的线程都执行完毕之后, 才会继续执行后续的代码
+
+	fmt.Println(time.Now())
+	wg.Add(2)
+	go SayGreetings("hi", 10, 1)
+	go SayGreetings("weidingyi", 10, 2)
+
+	wg.Wait()
+
+	fmt.Println(time.Now())
+	fmt.Println("两个线程都执行完毕了\n")
+}
+
+
 /**
 	Golang 多线程奉行的原则: 不要通过共享来通信, 要通过通信来共享!
  */
-func main()  {
+func myTestFunc1()  {
 	/**
 	 	此处只是实现了并发,
 		在Go 1.5将标识并发系统线程个数的runtime.GOMAXPROCS的初始值由1改为了运行环境的CPU核数
