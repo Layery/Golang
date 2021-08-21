@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"runtime"
 	"sync"
 	"time"
@@ -49,7 +50,10 @@ func SayGreetings(greeting string, times, label int) {
 
 func main() {
 
-	myTestFunc4()
+	myTestFunc6()
+	//myTestFunc5()
+
+	//myTestFunc4()
 
 	//myTestFunc3()
 	//myTestFunc2()
@@ -58,6 +62,78 @@ func main() {
 
 
 }
+
+func getApi(api string, ch chan string) {
+	_, err := http.Get(api)
+	if err != nil {
+		ch<- fmt.Sprintf("curr api %v is error %v \n", api, err)
+		return
+	}
+	ch <- fmt.Sprintf("curr api is success %v \n", api)
+}
+
+func myTestFunc6() {
+	start := time.Now()
+
+	// 定义一个channel
+	ch := make(chan string)
+	apis := []string{
+		"https://management.azure.com",
+		"https://dev.azure.com",
+		"https://api.github.com",
+		"https://outlook.office.com/",
+		"https://api.somewhereintheinternet.com/",
+		"https://graph.microsoft.com",
+	}
+	for _, api := range apis {
+		go getApi(api, ch)
+	}
+	//msg <-ch
+	//
+	//fmt.Printf("channel msg is: %v \n", msg)
+
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+	fmt.Print(<-ch)
+
+	limit := time.Since(start)
+	fmt.Printf("Done! it took %v seconds \n", limit.Seconds())
+}
+
+
+
+func myTestFunc5() {
+	start := time.Now()
+
+	apis := []string{
+		"https://management.azure.com",
+		"https://dev.azure.com",
+		"https://api.github.com",
+		"https://outlook.office.com/",
+		"https://api.somewhereintheinternet.com/",
+		"https://graph.microsoft.com",
+	}
+	for _, api := range apis {
+		_, err := http.Get(api)
+
+		if err != nil {
+			fmt.Printf("error: %s is down \n", api)
+			continue
+		}
+		fmt.Printf("success: %s is up and running \n", api)
+	}
+	limit := time.Since(start)
+	fmt.Printf("Done! it took %v seconds \n", limit.Seconds())
+}
+
+
+
 
 func myTestFunc4() {
 	var slice []func()

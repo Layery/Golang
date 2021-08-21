@@ -2,17 +2,7 @@ package main
 
 import (
 	"fmt"
-	"time"
 )
-
-// 模拟一个执行缓慢的函数
-func slowFunc(s int, c chan string)  {
-	fmt.Printf("sleep begin : %v \n", time.Now())
-	msg := fmt.Sprintf("我是一个执行了%d秒的函数, 我刚刚执行完毕", s)
-	time.Sleep(time.Duration(s) * time.Second)
-	fmt.Printf("sleep end : %v \n", time.Now())
-	c <- msg
-}
 
 /**
 	channel 是goroutine之间, 相互通信的桥梁, 可以在各个goroutine之间收发消息
@@ -26,29 +16,34 @@ func slowFunc(s int, c chan string)  {
 		3. 通道内一次只能接收一个数据元素
  */
 func main() {
-
 	/**
 		通道使用make语法来创建, 如下:
 		关键字chan后边定义的类型, 代表该通道将用来存储何种类型的数据
 		make函数默认创建出来的通道是无缓冲通道, 无缓冲 channel 在同步发送和接收操作。 即使使用并发，通信也是同步的。
+
+		如果想创建有缓冲的channel, 可以在make函数的第2个参数, 设置为通道的缓冲大小, 如下所示
+	    当 channel 已满时，任何发送操作都将等待，直到有空间保存数据。
+	               相反，如果 channel 是空的且存在读取操作，程序则会被阻止，直到有数据要读取。
 	 */
-	chan1 := make(chan string)
+	size := 2
+	ch := make(chan string, size)
+	send(ch, "one")
+	send(ch, "two")  // 至此, 主协程已经将ch容量占满,
+	go send(ch, "three") // 这两个子协程虽然在往里send数据, 只是没有send进去
+	go send(ch, "four")
+	//time.Sleep(10 * time.Second) // 主协程睡10秒
+	fmt.Println("主协程数据send完毕 \n\n")
 
-	// chan2 := make(chan bool)
-	// chan3 := make(chan []*int)
-	// chan4 := make(chan interface{}) // 定义一个可以接收任何数据类型的通道
-	// fmt.Printf("%#v\n %#v \n %#v\n", chan4)
+	// 主协程开始读取ch里的数据, 同时, 两个go子协程里, 因为for读取之后有了空余空间
+	// 所以它们两个可以往ch里塞数据了
+	// 所以这个for循环里, 可以将4条数据都读取出来
+	for i := 0; i < 4 ; i ++ {
+		fmt.Println("msg => " + <-ch)
+	}
+}
 
-	go slowFunc(8, chan1)
-
-	msg, ok := <- chan1 // 非阻塞接收数据
-
-	//msg := <- chan1 // 阻塞接收数据
-
-	fmt.Printf("ok ====> %#v \n", ok)
-
-	fmt.Printf("msg ====> %#v \n", msg)
-
-	fmt.Printf("我是主线程, 我刚刚执行完毕\n")
-	//time.Sleep(5 * time.Second)
+func send(ch chan string, message string) {
+	fmt.Println("start:  " + message)
+	ch <- message
+	fmt.Println("end:  " + message)
 }

@@ -5,9 +5,9 @@ import (
 	"net/http"
 )
 
-func main()  {
-	http.Handle("/", http.FileServer(http.Dir("E:/")))
-	err := http.ListenAndServe(":80", nil)
+func main() {
+	http.Handle("/", http.FileServer(http.Dir("/")))
+	err := http.ListenAndServe(":8181", nil)
 	if err != nil {
 		fmt.Println(err)
 	}

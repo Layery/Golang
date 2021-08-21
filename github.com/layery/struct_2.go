@@ -66,7 +66,7 @@ func main() {
 	fmt.Printf("可以通过.的方式来访问结构体的内部字段 %#v\n", person3.Address.province)
 
 	// 也可以直接访问结构内部的子结构体的字段
-	fmt.Printf("也可以直接访问子结构体的内部字段%#v\n", person3.Address.city)
+	fmt.Printf("也可以直接访问子结构体的内部字段%#v\n", person3.city)
 
 	// 当父结构体嵌套了多个结构体时, 如果子结构体中有重名的字段, 则访问的时候,
 	// 必须指定访问的是哪个子结构体

@@ -15,6 +15,7 @@ type Person struct {
 	age     int8
 	Address string `json:"local, int"`    // 表示用local代替原始的Address的字段名
 	sex     int8   `json:-`               // 表示对该字段不进行序列化
+	// omitempty是忽略该字段所有空值的场景
 	Email   string `json:email,omitempty` // 由于Go中字段首字母大写, 代表外部可访问的变量, 也可以是使用json TAG 更加定制化的生成json格式数据
 }
 
