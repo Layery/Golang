@@ -91,7 +91,7 @@ func (u *User) CreateUser() string {
 
 	log.Printf("=====> user %#v\n", user)
 	log.Printf("result2: %v \n", result2)
-	log.Printf("result2 error \n", result2.Error)
+	log.Printf("result2 error %v \n", result2.Error)
 
 	return "create user ok"
 }
