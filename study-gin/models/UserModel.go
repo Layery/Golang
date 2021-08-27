@@ -38,12 +38,12 @@ func (u *User) GetUserList() interface{} {
 		//gorm.DeletedAt `json:"del_time"`
 	}
 	// 查询单条数据
-	_ = db.Take(&u)
+	_ = dbreader.Take(&u)
 
 	// 查询全部数据
 	var userList []User
 	var resultList []interface{}
-	db.Find(&userList)
+	dbreader.Find(&userList)
 
 	for _, row := range userList {
 		temp := new(tempUser)
@@ -77,9 +77,13 @@ func (u *User) GetUserList() interface{} {
 func (u *User) CreateUser() string {
 	user := User{Username: "llf", Password: "123444", Role: 1}
 
-	db.AutoMigrate(&User{})
+	err := dbreader.AutoMigrate(&User{})
 
-	result1 := db.Create(&user) // 通过数据的指针来创建
+	if err != nil {
+		log.Fatal("auto migrate err: ", err)
+	}
+
+	result1 := dbreader.Create(&user) // 通过数据的指针来创建
 
 	log.Printf("insert user id %#v \n", user.ID)
 	log.Printf("result is %#v \n", result1)
@@ -87,7 +91,7 @@ func (u *User) CreateUser() string {
 
 	// 用指定的字段创建记录
 
-	result2 := db.Select("Username", "Password", "Role").Create(&user)
+	result2 := dbreader.Select("Username", "Password", "Role").Create(&user)
 
 	log.Printf("=====> user %#v\n", user)
 	log.Printf("result2: %v \n", result2)

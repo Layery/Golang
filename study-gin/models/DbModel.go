@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	db  *gorm.DB
-	err error
+	db       *gorm.DB
+	dbreader *gorm.DB
+	err      error
 )
 
 func InitDb() {
@@ -35,4 +36,20 @@ func InitDb() {
 		log.Println("数据库联接失败")
 		os.Exit(1)
 	}
+
+	dsnreader := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
+		"reader",
+		"llf",
+		"127.0.0.1",
+		"3308",
+		"blog",
+		"utf8mb4",
+	)
+
+	dbreader, err = gorm.Open(mysql.Open(dsnreader), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+	})
+
 }
