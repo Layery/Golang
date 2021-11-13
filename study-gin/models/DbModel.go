@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	db       *gorm.DB
+	DB *gorm.DB
 	dbreader *gorm.DB
 	err      error
 )
@@ -24,10 +24,10 @@ func InitDb() {
 		"root",
 		"127.0.0.1",
 		"3306",
-		"blog",
+		"fastadmin",
 		"utf8mb4",
 	)
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},

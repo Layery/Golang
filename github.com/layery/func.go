@@ -65,17 +65,17 @@ func main() {
 
 	// defer 语句会在程序都执行完后开始执行
 	for i := 0; i < 5; i++ {
-		defer fmt.Printf("%d \n", i) // 使用了defer之后, 打印顺序变成了倒序了
-		fmt.Printf("%d \n", i)       // 不使用defer时, 打印顺序就是正序的
+		defer fmt.Printf("使用了defer之后, 打印顺序变成了倒序了: %d \n", i)
+		fmt.Printf("不使用defer时, 打印顺序就是正序的: %d \n", i)
 	}
 	// 由于使用了...的语法, 该函数支持多个参数
 	rs := TotalSum(3, 4, 5)
 	fmt.Println(rs)
 
-	var array = [10]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	var array = [11]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	slice := array[:5]
-	fmt.Printf("%t, %v \n", slice, slice)
+	fmt.Printf("type is %T, <====> value is %v \n", slice, slice)
 
 	// 将函数, 作为参数传到filter函数中, 则 传入的函数参数将会在内部执行, 类似于PHP的array_map函数的用法
 	odd := filter(slice, isOdd)

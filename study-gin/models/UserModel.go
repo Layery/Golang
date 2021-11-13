@@ -29,6 +29,8 @@ type UserModel struct {
 }
 type User UserModel
 
+
+
 func (u *User) GetUserList() interface{} {
 	// 通过扩展user, 来增加一个反给前端的临时字段Address,(这个字段在数据库是不存在的)
 	// 这个扩展只需将User作为tempUser的匿名字段即可, 方便后续处理
@@ -77,13 +79,13 @@ func (u *User) GetUserList() interface{} {
 func (u *User) CreateUser() string {
 	user := User{Username: "llf", Password: "123444", Role: 1}
 
-	err := dbreader.AutoMigrate(&User{})
+	err := DB.AutoMigrate(&User{})
 
 	if err != nil {
 		log.Fatal("auto migrate err: ", err)
 	}
 
-	result1 := dbreader.Create(&user) // 通过数据的指针来创建
+	result1 := DB.Create(&user) // 通过数据的指针来创建
 
 	log.Printf("insert user id %#v \n", user.ID)
 	log.Printf("result is %#v \n", result1)
@@ -91,7 +93,7 @@ func (u *User) CreateUser() string {
 
 	// 用指定的字段创建记录
 
-	result2 := dbreader.Select("Username", "Password", "Role").Create(&user)
+	result2 := DB.Select("Username", "Password", "Role").Create(&user)
 
 	log.Printf("=====> user %#v\n", user)
 	log.Printf("result2: %v \n", result2)

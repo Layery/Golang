@@ -35,6 +35,7 @@ func InitAdminRouter() {
 		frontRouter.GET("/users", v1.UserController.GetUserList)    // 调用UserController下的一个方法
 		frontRouter.GET("/map", v1.TestMapSlice)                    // 调用普通函数, 虽然也是UserController下的函数, 但是并不能直观的看出来, 它是在哪个文件下
 		frontRouter.GET("/arr", v1.TestArrayMap)
+		frontRouter.GET("/lists", v1.AttachmentController.GetList)
 	}
 
 	_ = router.Run()
