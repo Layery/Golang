@@ -25,16 +25,17 @@ import (
 const (
 	USERNAME  string = "gejinchenxiao"
 	PASSWD    string = "555xiaomo"
-	NOTICE_KEY_L string = "SCT134777TWud4DY1RSOGQn98BWh0G5hvz" // layery
-	NOTICE_KEY_C string = "SCT134783TvDvcfZCdCCn4cvNfXRHQ0vu9" // xiaomo
+	PUSH_PLUS_TOKEN_L = "13b306b602814b2a8f8798874a1ba49f"
+	PUSH_PLUS_TOKEN_C = "5029ee32cfcf4f409b19489237be3932"
+	RN = "\r\n"
 )
 
 var jar, _ = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List}) // 为了根据域名, 安全的设置cookie
 
 var ApiListMap = map[string]string{
 	"login": "http://www.haisirui.xin/index/Apprentice/getlogin.html",
-	"notice_c": "https://sctapi.ftqq.com/"+ NOTICE_KEY_C +".send",
-	"notice_l": "https://sctapi.ftqq.com/"+ NOTICE_KEY_L +".send",
+	"notice_c": "http://pushplus.hxtrip.com/send?"+ PUSH_PLUS_TOKEN_C,
+	"notice_l": "http://pushplus.hxtrip.com/send?"+ PUSH_PLUS_TOKEN_L,
 }
 
 var JobApiMap = map[string]string{
@@ -212,53 +213,6 @@ func (p *Person) IsLogin() *Person {
 	}
 }
 
-//
-//func (p Person) DoJob() {
-//	utils.P("begin do job")
-//	var client *http.Client
-//	if !p.IsLogin() {
-//		client = p.Login()
-//	}
-//	//client := &http.Client{}
-//
-//
-//	for {
-//
-//		api := "http://micro.cc:880/site/test"
-//
-//		// 只要是想自定义头, 就得使用NewRequest方法
-//		urlModel, _ := url.Parse(api)
-//		request, _ := http.NewRequest(http.MethodPost, urlModel.String(), nil)
-//		resp, _ := client.Do(request)
-//		defer resp.Body.Close()
-//
-//
-//		body, _ := ioutil.ReadAll(resp.Body)
-//
-//		utils.P(string(body))
-//
-//		time.Sleep(time.Second * 5)
-//	}
-//
-//
-//
-//
-//
-//
-//}
-//
-//func SetCookie(key string, value interface{}) {
-//	container.Store(key, value)
-//}
-//
-//func GetCookie(key string) interface{} {
-//	val, ok := container.Load(key)
-//	if ok {
-//		return val
-//	}
-//	return nil
-//}
-
 func MyPostForm() {
 	api := "http://debug.cc/debug.php"
 	client := http.Client{}
@@ -301,75 +255,6 @@ func (p *Person) BeforeLogin(url string) *Person {
 	return p
 }
 
-//func MyPostWithCookie() {
-//	api := "http://gongzhonghao.cc/a.php/index/login?url=/a.php/category?ref=addtabs"
-//
-//	//jar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List}) // 为了根据域名, 安全的设置cookie
-//	jar, _ := cookiejar.New(nil) // 为了根据域名, 安全的设置cookie
-//	client := http.Client{}
-//	client.Jar = jar
-//
-//	__token__ := BeforLogin("http://gongzhonghao.cc/a.php/index/login")
-//	post := map[string]interface{}{
-//		"__token__": __token__,
-//		"username": "admin",
-//		"password": "111111",
-//	}
-//
-//	postString := GetHttpBuildQuery(post)
-//
-//
-//	utils.P(strings.NewReader(postString))
-//
-//	request, _ := http.NewRequest("POST", api, strings.NewReader(postString))
-//	request.Header.Set("X-Requested-With", "XMLHttpRequest")
-//	request.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-//
-//
-//
-//	resp, _ := client.Do(request)
-//	body, _ := ioutil.ReadAll(resp.Body)
-//
-//	utils.P(string(body))
-//
-//
-//
-//
-//	listApi := "http://gongzhonghao.cc/a.php/category/index?sort=weigh&order=desc&_=1642726405011"
-//
-//	request, _ = http.NewRequest(http.MethodGet, listApi, nil)
-//	request.Header.Set("X-Requested-With", "XMLHttpRequest")
-//	//request.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-//	//request2.Header.Set("Cookie", "PHPSESSID=c2h23unv9vb15rh3o65tmhip6h")
-//
-//
-//	resp2, _ := client.Do(request)
-//
-//
-//
-//	body, _ = ioutil.ReadAll(resp2.Body)
-//
-//	utils.P(string(body))
-//
-//	// 获取请求的
-//	//cookie
-//	cookies, _ := request.Cookie("gongzhonghao.com")
-//	utils.P(cookies)
-//
-//
-//}
-
-func MyHeadRequest() {
-	api := "http://debug.cc/debug.php"
-	client := http.Client{}
-	resq, err := client.Head(api)
-	if err != nil {
-		panic(err)
-	}
-
-	utils.P(resq.Cookies())
-
-}
 
 func MyPostWithJsonData() {
 	api := "http://micro.cc:880/site/test"
@@ -464,16 +349,18 @@ func (p *Person) PanicReLogin() {
 
 func (p *Person)doJingDongJob() {
 	log.Println("begin do job")
-	for _, api := range JobApiMap {
+	for jobName, api := range JobApiMap {
 
 		request, _ := http.NewRequest(http.MethodGet, api, nil)
+
+		apiRootPath := request.URL.Scheme + "://" + request.URL.Host + "/public/index.php"
 
 		//proxy, _ := url.Parse("http://127.0.0.1:8888")
 		client := http.Client{
 			//Transport: &http.Transport{
 			//	Proxy:http.ProxyURL(proxy),
 			//},
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			CheckRedirect: func(req *http.Request, via []*http.Request) error { // 这里防止自动302, 返回一个error, 便会只请求一次
 				return errors.New("first request end")
 			},
 		}
@@ -502,15 +389,24 @@ func (p *Person)doJingDongJob() {
 			_ = json.Unmarshal(body, &jsonData)
 			if status, ok := jsonData["status"]; ok {
 				if status == float64(200) {
-					// 找到任务, 通知我
-					// todo 获取该任务的标题, 价格, 佣金 等关键字段,
-					p.NoticeMe("又刷到了一个单子, 请登录查看")
+					// 找到任务, 抓取任务页, 保存
+					taskUrl := apiRootPath + jsonData["task"].(string)
+					request, _ = http.NewRequest(http.MethodGet, taskUrl, nil)
+					resp, _ := client.Do(request)
+					defer resp.Body.Close()
+					body, _ := ioutil.ReadAll(resp.Body)
+
+					date := time.Now().Format("2006-01-02 15-04")
+					date += ".html"
+					logName := p.GetDataPath() + jobName + "-" + date
+					_ = ioutil.WriteFile(logName, body, 0777)
+
+					//todo 获取该任务的标题, 价格, 佣金 等关键字段,
+					p.NoticeMe("又刷到一个单子, 请登录查看", p.GenerateNoticeContent(jobName, logName))
 				}
 			}
 		}
 	}
-
-	fmt.Println()
 	fmt.Println()
 }
 
@@ -531,31 +427,41 @@ func (p *Person)DoJob() *Person{
 
 		p.doJingDongJob()
 
-
 		time.Sleep(time.Minute)
 	}
 }
 
 // 程序无法自动登录, 发送通知后, die掉
-func (p *Person)NoticeMe(msg string) {
-	postParams := url.Values{
-		"text":   []string{"刷单脚本提示您: " + msg},
-		"desp":   []string{msg},
+func (p *Person)NoticeMe(msg, content string) {
+	postMap := map[string]interface{}{
+		"token": PUSH_PLUS_TOKEN_L,
+		"title": msg,
+		"content": content,
 	}
-	response, err_me := http.Post(ApiListMap["notice_l"], "application/x-www-form-urlencoded", strings.NewReader(postParams.Encode()))
+	postParams, _ := json.Marshal(postMap)
+
+	postData := bytes.NewReader(postParams)
+
+	response, err_me := http.Post(ApiListMap["notice_l"], "application/json", postData)
 	defer response.Body.Close()
-	time.Sleep(time.Second * 2)
 	if err_me != nil {
 		log.Println("poster_err", err_me)
 	}
 
-	resp, err := http.Post(ApiListMap["notice_c"], "application/x-www-form-urlencoded", strings.NewReader(postParams.Encode()))
-	defer resp.Body.Close()
-	if err != nil {
-		log.Println("poster_err", err_me)
+	time.Sleep(time.Second * 2)
+
+	postMap = map[string]interface{}{
+		"token": PUSH_PLUS_TOKEN_C,
+		"title": msg,
+		"content": content,
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
+	postParams, _ = json.Marshal(postMap)
+	postData = bytes.NewReader(postParams)
+	response, _ = http.Post(ApiListMap["notice_c"], "application/json", postData)
+	defer response.Body.Close()
+	body, _ := ioutil.ReadAll(response.Body)
 	log.Println("poster_succ", string(body))
+
 
 	// 发送完通知后, 程序睡眠10分钟??
 	time.Sleep(time.Minute * 10)
@@ -583,19 +489,43 @@ func IsCouldRun() bool{
 }
 
 func (p *Person)Debug ()  {
+	// http://micro.cc/site/debug
 
-	for {
-		if IsCouldRun() {
-			log.Println("每隔2秒执行一次")
-		} else {
-			log.Println("准备开始阻塞")
-			<- (chan int)(nil)
-		}
-		time.Sleep(time.Second * 2)
-	}
+	resp, _ := http.Get("http://micro.cc/site/debug")
+
+	date := time.Now().Format("2006-01-02 15-04")
+	date += ".html"
+	logName := p.GetDataPath() + "debug" + "-" + date
+	body, _ := ioutil.ReadAll(resp.Body)
+	_ = ioutil.WriteFile(logName, body, 0777)
+
+	rs := p.GenerateNoticeContent("browser", logName)
+	p.NoticeMe("又刷到一个单子, 请登录查看", rs)
+
 }
 
 
+func (p *Person) GenerateNoticeContent(jobType, logName string) string {
+	titleMap := map[string]string{
+		"jd_job": "京东任务",
+		"pick_up": "快捷任务",
+		"tb_job": "淘宝任务",
+		"obtain": "obtain",
+		"browser": "浏览器任务",
+		"pdd_job": "拼多多",
+	}
+
+	body, _ := ioutil.ReadFile(logName)
+
+	// 加载html doc
+	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
+
+	price := doc.Find(".customer_order").Text()
+
+	keyword, _ := doc.Find(".key_word_hidden").Attr("value")
+
+	return "类别: " + titleMap[jobType] + RN + "价格: " + price + RN + "关键词: " + keyword
+}
 
 
 func main() {
@@ -607,7 +537,6 @@ func main() {
 			var person Person
 			s := catch.(string)
 			_ = json.NewDecoder(strings.NewReader(s)).Decode(&err)
-
 			if err.Status == 302 { // 5kqljb892qqlcmgga0cbuilcc7
 				log.Println("登录已失效, 重新登录")
 
@@ -617,15 +546,18 @@ func main() {
 
 			if err.Status == 9999 { // 登录失败, 通知我
 				log.Println("登录失败: ",catch)
-				person.NoticeMe(s)
+				person.NoticeMe("重新登录失败", "")
 			}
-
 		}
 	}()
 
-	var person Person
 
-	_ = person.DoJob()
+	var p Person
+
+	_ = p.DoJob()
+
+	//p.Debug()
+
 
 	//go func() {
 	//	person.Debug()

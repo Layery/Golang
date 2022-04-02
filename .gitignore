@@ -38,3 +38,5 @@ phpunit.phar
 
 # vagrant runtime
 /.vagrant
+
+/shuadan/data
