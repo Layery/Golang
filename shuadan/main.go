@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/gookit/goutil/dump"
 	"github.com/gookit/goutil/strutil"
 	"golang.org/x/net/publicsuffix"
 	"io/ioutil"
@@ -18,6 +19,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"shuadan/utils"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -127,7 +129,6 @@ func (p Person) GetDataPath() string {
 	// 程序go run 运行 与 go build 运行时, 如何识别项目路径 ??
 	file, _ := exec.LookPath(os.Args[0])
 	execPath, _ := filepath.Abs(file)
-
 	isCheck := strings.Contains(execPath, tempPath) // true: go run , false: go build
 
 	var dataPath string
@@ -399,10 +400,11 @@ func (p *Person)doJingDongJob() {
 					date := time.Now().Format("2006-01-02 15-04")
 					date += ".html"
 					logName := p.GetDataPath() + jobName + "-" + date
+					log.Println("logname", logName)
 					_ = ioutil.WriteFile(logName, body, 0777)
 
-					//todo 获取该任务的标题, 价格, 佣金 等关键字段,
-					p.NoticeMe("又刷到一个单子, 请登录查看", p.GenerateNoticeContent(jobName, logName))
+					priceFloat, content := p.GenerateNoticeContent(jobName, logName)
+					p.NoticeMe("又刷到一个单子, 请登录查看", content, priceFloat)
 				}
 			}
 		}
@@ -432,7 +434,14 @@ func (p *Person)DoJob() *Person{
 }
 
 // 程序无法自动登录, 发送通知后, die掉
-func (p *Person)NoticeMe(msg, content string) {
+func (p *Person)NoticeMe(msg, content string, currPrice float64) bool {
+
+	constPrice := float64(400)
+
+	if currPrice >= constPrice {
+		log.Println("price more than 400, continue!")
+		return false
+	}
 	postMap := map[string]interface{}{
 		"token": PUSH_PLUS_TOKEN_L,
 		"title": msg,
@@ -462,9 +471,9 @@ func (p *Person)NoticeMe(msg, content string) {
 	body, _ := ioutil.ReadAll(response.Body)
 	log.Println("poster_succ", string(body))
 
-
 	// 发送完通知后, 程序睡眠10分钟??
 	time.Sleep(time.Minute * 10)
+	return true
 }
 
 func IsCouldRun() bool{
@@ -491,21 +500,19 @@ func IsCouldRun() bool{
 func (p *Person)Debug ()  {
 	// http://micro.cc/site/debug
 
-	resp, _ := http.Get("http://micro.cc/site/debug")
+	// 价格格式化为整数
+	price := "125,121.0213"
+	f := strings.NewReplacer(",", "")
+	priceFormate := f.Replace(price)
 
-	date := time.Now().Format("2006-01-02 15-04")
-	date += ".html"
-	logName := p.GetDataPath() + "debug" + "-" + date
-	body, _ := ioutil.ReadAll(resp.Body)
-	_ = ioutil.WriteFile(logName, body, 0777)
+	s, _ := strconv.ParseFloat(priceFormate, 10)
+	l := float64(32.00)
 
-	rs := p.GenerateNoticeContent("browser", logName)
-	p.NoticeMe("又刷到一个单子, 请登录查看", rs)
-
+	dump.Println(s, l)
 }
 
 
-func (p *Person) GenerateNoticeContent(jobType, logName string) string {
+func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string) {
 	titleMap := map[string]string{
 		"jd_job": "京东任务",
 		"pick_up": "快捷任务",
@@ -524,7 +531,23 @@ func (p *Person) GenerateNoticeContent(jobType, logName string) string {
 
 	keyword, _ := doc.Find(".key_word_hidden").Attr("value")
 
-	return "类别: " + titleMap[jobType] + RN + "价格: " + price + RN + "关键词: " + keyword
+	// 价格格式化为float64
+	f := strings.NewReplacer(",", "")
+	priceString := f.Replace(price)
+	priceFloat, _ := strconv.ParseFloat(priceString, 10)
+
+	// 如果log没内容, 不发通知
+	lens := len(body)
+	if lens <= 0 {
+		log.Println("job web content is null!")
+		priceFloat = float64(999)
+	}
+
+	time.Sleep(time.Second)
+
+	_ = os.Remove(logName)
+
+	return priceFloat, "类别: " + titleMap[jobType] + RN + "价格: " + price + RN + "关键词: " + keyword
 }
 
 
@@ -546,7 +569,7 @@ func main() {
 
 			if err.Status == 9999 { // 登录失败, 通知我
 				log.Println("登录失败: ",catch)
-				person.NoticeMe("重新登录失败", "")
+				person.NoticeMe("重新登录失败", "", 0)
 			}
 		}
 	}()
@@ -555,8 +578,6 @@ func main() {
 	var p Person
 
 	_ = p.DoJob()
-
-	//p.Debug()
 
 
 	//go func() {
