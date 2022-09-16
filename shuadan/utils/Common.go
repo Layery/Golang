@@ -61,12 +61,6 @@ func T(data interface{}) {
 	fmt.Println()
 }
 
-func init() {
-	fmt.Println("==================================================================")
-}
-
-
-
 
 
 

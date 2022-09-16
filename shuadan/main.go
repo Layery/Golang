@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gookit/goutil/dump"
 	"github.com/gookit/goutil/fsutil"
+
 	//"github.com/gookit/goutil/dump"
-	"github.com/gookit/goutil/strutil"
-	"golang.org/x/net/publicsuffix"
 	"io"
 	"io/ioutil"
 	"log"
@@ -27,6 +27,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gookit/goutil/strutil"
+	"golang.org/x/net/publicsuffix"
 )
 
 const (
@@ -49,9 +52,13 @@ var noticeType = map[int]string{
 	3: "重新登录失败",
 }
 
-func getNoticeMsg(msgType int) string {
+func getNoticeMsg(msgType int, noticeTitle string) string {
 	if msg, ok := noticeType[msgType]; ok {
-		return msg
+		if msgType == 1 {
+			return noticeTitle
+		} else {
+			return msg
+		}
 	}
 	return "未知的消息类型"
 }
@@ -101,7 +108,6 @@ type LoginResult struct {
 	ReceivingSign int    `json:"receiving_sign"`
 	UserSjcode    string `json:"user_sjcode"`
 }
-
 
 func BuildQueryParams(req *http.Request, params map[string]string) (*http.Request, error) {
 	q := req.URL.Query()
@@ -192,7 +198,6 @@ func (p *Person) Login() *Person {
 
 	var jar, _ = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List}) // 为了根据域名, 安全的设置cookie
 
-
 	p.BeforeLogin("http://www.haisirui.xin/index/apprentice")
 	postParams := url.Values{
 		"userName":   []string{p.UserName},
@@ -230,7 +235,6 @@ func (p *Person) Login() *Person {
 
 		// 保存cookie到本地
 		_ = p.WriteCookie(resp.Cookies())
-		log.Println(strutil.Substr(p.UserName, 0, 1) + " login success")
 
 	} else {
 		loginResult.Status = 9999
@@ -395,7 +399,6 @@ func (p *Person) runJob() {
 	jar, _ := cookiejar.New(nil)
 	jar.SetCookies(urlModel, cookieArray)
 
-
 	for jobName, api := range JobApiMap {
 
 		request, _ := http.NewRequest(http.MethodGet, api, nil)
@@ -430,7 +433,7 @@ func (p *Person) runJob() {
 		}
 
 		body, _ := ioutil.ReadAll(resp.Body)
-		log.Println(strutil.Substr(p.UserName, 0, 1), string(body))
+
 		if resp.StatusCode == 200 {
 			jsonData := make(map[string]interface{})
 			_ = json.Unmarshal(body, &jsonData)
@@ -448,8 +451,8 @@ func (p *Person) runJob() {
 					logName := p.GetDataPath() + jobName + "-" + date
 					_ = ioutil.WriteFile(logName, body, 0777)
 
-					priceFloat, content := p.GenerateNoticeContent(jobName, logName)
-					p.NoticeMe(1, taskUrl, content, priceFloat)
+					priceFloat, noticeTitle, content := p.GenerateNoticeContent(jobName, logName)
+					p.NoticeMe(1, taskUrl, noticeTitle, content, priceFloat)
 				}
 			}
 		}
@@ -469,10 +472,9 @@ func (p *Person) DoJob() *Person {
 }
 
 // 程序无法自动登录, 发送通知后, die掉
-func (p *Person) NoticeMe(msgType int, jumpUrl, content string, currPrice float64) bool {
+func (p *Person) NoticeMe(msgType int, jumpUrl, noticeTitle, content string, currPrice float64) bool {
 
 	if currPrice >= UN_NOTICE_PRICE {
-		log.Println("price more than 400, continue!")
 		return false
 	}
 
@@ -481,7 +483,7 @@ func (p *Person) NoticeMe(msgType int, jumpUrl, content string, currPrice float6
 	postMap := map[string]interface{}{
 		"time":     currTime,
 		"sign":     getSign(currTime), // 计算调用接口的签名
-		"title":    getNoticeMsg(msgType),
+		"title":    getNoticeMsg(msgType, noticeTitle),
 		"jump_url": jumpUrl,
 		"content":  content,
 		"who":      p.UserName,
@@ -491,11 +493,8 @@ func (p *Person) NoticeMe(msgType int, jumpUrl, content string, currPrice float6
 
 	postData := bytes.NewReader(postParams)
 
-	response, err_me := http.Post(ApiListMap["notice_wechat"], "application/json", postData)
+	response, _ := http.Post(ApiListMap["notice_wechat"], "application/json", postData)
 	defer response.Body.Close()
-	if err_me != nil {
-		log.Println("poster_err", err_me)
-	}
 
 	body, _ := ioutil.ReadAll(response.Body)
 	log.Println("poster_succ", string(body))
@@ -552,8 +551,7 @@ func (m *MyReader) Read(p []byte) (int, error) {
 	return num, err
 }
 
-
-func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string) {
+func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string, string) {
 	titleMap := map[string]string{
 		"jd_job":  "京东任务",
 		"pick_up": "快捷任务",
@@ -580,7 +578,6 @@ func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string
 	// 如果log没内容, 不发通知
 	lens := len(body)
 	if lens <= 0 {
-		log.Println("job web content is null!")
 		priceFloat = float64(999)
 	}
 
@@ -588,7 +585,9 @@ func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string
 
 	_ = os.Remove(logName)
 
-	return priceFloat, "类别: " + titleMap[jobType] + RN + "价格: " + price + RN + "关键词: " + keyword
+	noticeTitle := "【"+ titleMap[jobType]+"】【" + price + "】【"+ keyword +"】"
+
+	return priceFloat, noticeTitle, "类别: " + titleMap[jobType] + RN + "价格: " + price + RN + "关键词: " + keyword
 }
 
 func testChan() {
@@ -661,7 +660,6 @@ func (u *User) Login() error {
 	return nil
 }
 
-
 func ioReaderStudy() {
 	str := "abcdefghjkmnopq"
 	p := make([]byte, 4)
@@ -707,15 +705,14 @@ func ioReaderStudy() {
 	}
 }
 
-
 func futuMianShiTi() {
 
 	type T rune
 
 	type myT T
 	var (
-		t T
-		p *T
+		t  T
+		p  *T
 		i1 interface{} = t
 		i2 interface{} = p
 	)
@@ -729,10 +726,10 @@ func futuMianShiTi() {
 
 	fmt.Printf("%#v === %#v\n", i1 == t, i1 == nil)
 	fmt.Printf("%#v === %#v\n", i2 == p, i2 == nil)
-	fmt.Printf("\n%p ==> %v\n %p ==> %v\n %p ==> %v\n %p ==> %v\n", &t, t, &p, p,&i1, i1, &i2, i2)
+	fmt.Printf("\n%p ==> %v\n %p ==> %v\n %p ==> %v\n %p ==> %v\n", &t, t, &p, p, &i1, i1, &i2, i2)
 }
 
-func ioReaderBufioStudy () {
+func ioReaderBufioStudy() {
 	res, err := os.Open("./config.toml")
 	if err != nil {
 		log.Fatal(err)
@@ -760,7 +757,6 @@ func Debug() {
 	ioReaderBufioStudy()
 }
 
-
 func main() {
 
 	go func() {
@@ -778,8 +774,7 @@ func main() {
 				}
 
 				if err.Status == 9999 { // 登录失败, 通知我
-					log.Println("登录失败: ", catch)
-					person.NoticeMe(3, "", "", 0)
+					person.NoticeMe(3, "https://www.baidu.com", "", "", 0)
 				}
 			}
 		}()
@@ -808,8 +803,7 @@ func main() {
 				}
 
 				if err.Status == 9999 { // 登录失败, 通知我
-					log.Println("登录失败: ", catch)
-					person.NoticeMe(3, "", "", 0)
+					person.NoticeMe(3, "https://www.baidu.com", "", "", 0)
 				}
 			}
 		}()
