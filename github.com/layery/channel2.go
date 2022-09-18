@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
+	//"net/http"
+	_ "net/http/pprof"
 	"time"
 )
 
@@ -46,23 +46,15 @@ func testChan1 () {
 
 }
 
-func testTimer()  {
-	timer := time.NewTimer(time.Second * 10)
-	ticker := time.NewTicker(time.Second * 2)
 
-	rs := timer.Stop()
-
-	rs1 := timer.Stop()
-
-	_ = ticker
-
-	log.Println(rs)
-	log.Println(rs1)
-
-	pid := os.Getpid()
-
-	log.Println(pid)
+func testChan2() {
+	ch := make(chan int)
+	go func(ch chan<- int, x int) {
+		time.Sleep(time.Second)
+		<-ch
+	}(ch, 3)
 }
+
 /**
 	channel 是goroutine之间, 相互通信的桥梁, 可以在各个goroutine之间收发消息
 	通道的特性:
@@ -81,14 +73,12 @@ func testTimer()  {
  */
 func main() {
 
+	//go testChan1()
 
-
-	go testTimer()
-
-
-	go testChan1()
-
-	select{}
+	go testChan2()
+	for {
+		select {}
+	}
 
 }
 
