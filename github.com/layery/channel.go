@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
 // 模拟一个执行缓慢的函数
-func slowFunc(s int, c chan string)  {
+func slowFunc(s int, c chan string) {
 	fmt.Printf("sleep begin : %v \n", time.Now())
 	msg := fmt.Sprintf("我是一个执行了%d秒的函数, 我刚刚执行完毕", s)
 	time.Sleep(time.Duration(s) * time.Second)
@@ -30,13 +31,13 @@ channel 是goroutine之间, 相互通信的桥梁, 可以在各个goroutine之�
 	1. 给有缓冲通道发送数据, 发送长度满了之后, 将持续阻塞, 直到有其他goroutine从该通道内读取出数据来
 	2. 从有缓冲通道接收数据, 如果读取的长度达到设定的长度之后, 仍继续读取, 将会持续阻塞, 直到有其他goroutine写入数据至该通道内
 */
-func main() {
 
+func baseChannel() {
 	/**
-		通道使用make语法来创建, 如下:
-		关键字chan后边定义的类型, 代表该通道将用来存储何种类型的数据
-		make函数默认创建出来的通道是无缓冲通道, 无缓冲 channel 在同步发送和接收操作。 即使使用并发，通信也是同步的。
-	 */
+	通道使用make语法来创建, 如下:
+	关键字chan后边定义的类型, 代表该通道将用来存储何种类型的数据
+	make函数默认创建出来的通道是无缓冲通道, 无缓冲 channel 在同步发送和接收操作。 即使使用并发，通信也是同步的。
+	*/
 	chan1 := make(chan string)
 
 	// chan2 := make(chan bool)
@@ -46,7 +47,7 @@ func main() {
 
 	go slowFunc(8, chan1)
 
-	msg, ok := <- chan1 // 非阻塞接收数据
+	msg, ok := <-chan1 // 非阻塞接收数据
 	fmt.Printf("ok 用来判断是否从channle中读取到了数据 %#v \n", ok)
 	//msg := <- chan1 // 阻塞接收数据
 
@@ -54,4 +55,85 @@ func main() {
 
 	fmt.Printf("我是主线程, 我刚刚执行完毕\n")
 	//time.Sleep(5 * time.Second)
+}
+
+func sendMsgWhenChannelClosed() {
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("get error: ", err)
+		}
+	}()
+
+	ch := make(chan string, 5)
+
+	ticker := time.NewTicker(time.Second)
+
+	i := 0
+
+	for {
+		select {
+		case <-ticker.C:
+			if i == 2 { // 当第3秒的时候, 关闭通道
+				log.Println("close ch channel")
+				close(ch)
+			}
+			i += 1
+			msg := time.Now().String()
+			ch <- msg
+			log.Println("send msg: ", msg)
+		}
+	}
+
+}
+
+func recMsgOnClosedChannel() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("get an error: ", err)
+		}
+	}()
+
+	ch := make(chan string, 5)
+
+	timer := time.NewTimer(time.Second * 3)
+	ticker := time.NewTicker(time.Second)
+
+	for {
+		select {
+		case <-timer.C:
+			log.Println("时间到, 关闭ch")
+			ticker.Stop()
+			timer.Stop()
+			close(ch)
+
+			go func() {
+				for {
+					time.Sleep(time.Second)
+					log.Printf("ch长度: %#v, 开始从ch读取消息,msg: %v \n", len(ch), <-ch)
+				}
+			}()
+
+		case <-ticker.C:
+			msg := time.Now().String()
+			log.Println("向ch发送消息: ", msg)
+			ch <- msg
+		}
+
+		log.Println("ping...")
+	}
+}
+
+func main() {
+
+	// go baseChannel() // 基本使用
+
+	// go sendMsgWhenChannelClosed() // 当有缓冲通道关闭后, 再向其发送消息, 将会收到一个panic
+
+	go recMsgOnClosedChannel() // 从一个已关闭的有缓冲通道中接收消息
+
+	ch := make(chan struct{})
+
+	<-ch
+
 }

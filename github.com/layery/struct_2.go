@@ -22,7 +22,7 @@ type Human struct {
 
 */
 type Address struct {
-	province string
+	Province string
 	city     string
 	area     string
 }
@@ -42,12 +42,18 @@ type Person struct {
 func main() {
 	person1 := new(Human)
 
+	fmt.Println(person1)
+
 	person2 := Human{
 		"weidingyi",
 		30,
 	}
+	fmt.Println(person2)
 
-	fmt.Println(person1.int, person2.string, "\n\n")
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
 
 	// 使用嵌套结构体
 	person3 := Person{
@@ -55,21 +61,22 @@ func main() {
 		age:  30,
 		sex:  1,
 		Address: Address{
-			province: "北京-zi",
-			city:     "北京-zi",
-			area:     "朝阳区-zi",
+			Province: "北京-Province",
+			city:     "北京-city",
+			area:     "朝阳区-area",
 		},
 	}
 
 	fmt.Printf("%#v\n", person3)
 
-	fmt.Printf("可以通过.的方式来访问结构体的内部字段 %#v\n", person3.Address.province)
+	fmt.Printf("可以通过.的方式来访问结构体的内部字段 %#v\n", person3.Address.Province)
 
 	// 也可以直接访问结构内部的子结构体的字段
-	fmt.Printf("也可以直接访问子结构体的内部字段%#v\n", person3.city)
+	// 此时用的go1.17的版本, 貌似不能直接访问子结构体的字段
+	fmt.Printf("此时用的go1.17的版本, 貌似不能直接访问子结构体的字段%#v\n", person3.Info.city)
 
 	// 当父结构体嵌套了多个结构体时, 如果子结构体中有重名的字段, 则访问的时候,
-	// 必须指定访问的是哪个子结构体
+	// // 必须指定访问的是哪个子结构体
 	fmt.Printf("访问了Address下的city: %#v\n", person3.Address.city)
 	fmt.Printf("访问了Info下的city: %#v\n", person3.Info.city)
 

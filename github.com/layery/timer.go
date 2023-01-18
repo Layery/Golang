@@ -1,26 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
 	//"net/http"
 	_ "net/http/pprof"
 	"time"
 )
 
 /**
-	timer 在执行timer.Stop之后, 并不会关闭timer.C通道, 以防止其它go程从中读取数据
- */
-func testTimer_bak()  {
-	i := 0;
+timer 在执行timer.Stop之后, 并不会关闭timer.C通道, 以防止其它go程从中读取数据
+*/
+func testTimer_bak() {
+	i := 0
 	timer := time.NewTimer(time.Second * 10)
 	for {
 		log.Println(i, "main func")
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 5)
 		go func(index int) {
 			log.Println(index, "go func...")
 			select {
 			case <-timer.C:
-				log.Println(index, "timer.C 关闭了吗?", timer.Stop())
+				log.Printf("%#v, %#v \n", index, "timer.C 关闭了吗?", timer.Stop())
 			}
 			log.Println(index, "go func end ...")
 			return
@@ -29,20 +31,21 @@ func testTimer_bak()  {
 	}
 }
 
-
 /**
 timer 在执行timer.Stop之后, 并不会关闭timer.C通道, 以防止其它go程从中读取数据
 */
-func testTimer()  {
+func testTimer() {
 	log.Println("begin")
 	timer := time.NewTimer(time.Second * 10)
-	ticker := time.NewTicker(time.Second * 2)
+	ticker := time.NewTicker(time.Second * 1)
 
 	go func() {
 		for {
-			log.Println("debug")
-			_, data := <- ticker.C
-			log.Println("子go程", data)
+			select {
+			case <-ticker.C:
+				_, ok := <-timer.C
+				log.Println("子go程检测timer.C状态", ok)
+			}
 		}
 	}()
 
@@ -58,28 +61,75 @@ func testTimer()  {
 		*/
 		case <-timer.C:
 			log.Println("timer is end !")
-			ticker.Stop()
 			timer.Stop()
-			_, ok := <- timer.C
-			log.Println("timer触发后, C 的状态: ", ok)
+			fmt.Println("hello")
+
+			_, ok := <-timer.C
+			log.Println("timer.stop 触发后, timer.C 的状态: ", ok)
 		}
 
 	}()
 
 	for {
-		_, data := <- ticker.C
-		log.Println("我是读取ticker的父go程", data)
+		<-ticker.C
 	}
 
 }
+
+// 验证timer.stop后, 通道会不会关闭
+func checkTimerChan() {
+	log.Println("begin")
+
+	var ch = make(chan interface{}, 2)
+	var timer *time.Timer = nil
+	ticker := time.NewTicker(time.Second)
+
+	go func() {
+		select {
+		case <-ticker.C:
+			log.Printf("当前timer.c状态: %#v", timer.C)
+		}
+	}()
+
+	go func() {
+		timer = time.NewTimer(time.Second * 20) // 延时10秒结束
+	}()
+
+	ch <- 1
+	go func() {
+		select { // select 收到一条消息后, 将不再阻塞, 整个select语句就此结束
+		case <-ch:
+			log.Println("ch 收到信号, 执行timer.stop()")
+			// timer.Stop()
+		case <-timer.C:
+			log.Println("时间到")
+		}
+	}()
+
+	go func() {
+		time.Sleep(time.Second * 15)
+
+		log.Println("15秒后, 检查timer.C的状态, %#v", timer.C)
+
+	}()
+	for {
+		fmt.Println("the end")
+		time.Sleep(time.Second)
+		_, ok := <-timer.C
+		log.Printf("ping...%#v", ok)
+
+	}
+}
+
 /**
  */
 func main() {
 
-	go testTimer_bak()
+	// testTimer_bak()
 
-	go testTimer()
+	// go testTimer()
 
+	go checkTimerChan()
 	for {
 		select {}
 	}

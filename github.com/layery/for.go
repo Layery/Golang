@@ -25,7 +25,6 @@ func fixForFuncType2() {
 	fmt.Println()
 }
 
-
 func main() {
 	var arr = [3]int{1, 2, 3}
 
@@ -58,8 +57,8 @@ func main() {
 		fmt.Println(note + answer)
 	}()
 
-	for i := 0; i < len(arr); i ++ {
-		msg := fmt.Sprintf("对于数组, 我们是同一个内存地址: %v, 但是值却每次都不一样: %v", &i, i)
+	for i := 0; i < len(arr); i++ {
+		msg := fmt.Sprintf("对于数组, 我们是同一个内存地址: %v, 但是值却每次都不一样: %v", &arr[i], arr[i])
 		fmt.Println(msg)
 
 	}
@@ -74,17 +73,11 @@ func main() {
 
 	fmt.Println()
 
-
 	for i := 0; i < len(myslice); i++ {
 		defer func() {
 			msg := fmt.Sprintf("我们是同一个内存地址: %v, 但是值却每次都一样: %v", &i, i)
 			fmt.Println(msg)
 		}()
 	}
-
-
-
-
-
 
 }

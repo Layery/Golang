@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-func DD (data ...interface{}) { // 声明可变参数函数时，需要在参数列表的最后一个参数类型之前加上省略符号“...”，这表示该函数会接收任意数量的该类型参数。
+func DD(data ...interface{}) { // 声明可变参数函数时，需要在参数列表的最后一个参数类型之前加上省略符号“...”，这表示该函数会接收任意数量的该类型参数。
 	d, err := json.Marshal(data)
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +27,7 @@ func DD (data ...interface{}) { // 声明可变参数函数时，需要在参数
 
 // 从标准输入读入数据, 并直接写入到文件中
 func WriteFileFromBufio() {
-	fd, err := os.Open("./io.logasd")
+	fd, err := os.OpenFile("./io.log", os.O_CREATE, 0777)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,7 +35,6 @@ func WriteFileFromBufio() {
 	defer fd.Close()
 
 	reader := bufio.NewReader(os.Stdin)
-
 
 	p := make([]byte, 3)
 	for {
@@ -48,7 +47,6 @@ func WriteFileFromBufio() {
 			log.Fatal(err)
 		}
 
-
 		// 将读到的内容, 实时写入文件中去
 		if n > 0 {
 			_, writeErr := fd.WriteString(string(p[0:n]))
@@ -60,7 +58,6 @@ func WriteFileFromBufio() {
 		fmt.Println(string(p[0:n]))
 	}
 }
-
 
 func readDir(path string) {
 	rs, err := ioutil.ReadDir(path)
@@ -79,12 +76,12 @@ func readDir(path string) {
 
 }
 
-func main () {
+func main() {
 
-	//go WriteFileFromBufio()
+	// go WriteFileFromBufio()
 
 	go readDir(".")
 
-
 	select {}
+
 }
