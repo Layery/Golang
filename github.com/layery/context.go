@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -16,29 +17,28 @@ func contextWithCancel(ctxBackground context.Context) {
 		}
 	}()
 
-	go func(ctx context.Context) { // 这个协程控制停止信号
-		var cmd string
-		num, err := fmt.Scanf("%v", &cmd)
-		log.Println(num) // 获取输入的行数
-		if err != nil {
-			panic(err)
-		}
-		if cmd == "c" {
-			cancel()
-		}
-	}(ctx)
-
-	go func(ctx context.Context) { // 这个协程无限打印
-		for range time.Tick(time.Second) {
-			select {
+	i := 0
+	for i <= 10 {
+		go func(ctx context.Context, index int) {
+			for {
+				time.Sleep(time.Second)
+				select {
 				case <-ctx.Done():
-					log.Println("收到取消信号, 停止输出")
+					fmt.Println()
+					log.Println(strconv.Itoa(index)+ "收到停止信号")
 					return
-			default:
-				log.Println("ping...")
+				default:
+					log.Println("我是第" + strconv.Itoa(index) + "个协程")
+				}
 			}
-		}
-	}(ctx)
+		}(ctx, i)
+		i += 1
+	}
+
+	time.Sleep(time.Second)
+	cancel()
+
+	select {}
 }
 
 func contextWithValue (ctxBackground context.Context) {
