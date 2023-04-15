@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -16,35 +17,34 @@ func contextWithCancel(ctxBackground context.Context) {
 		}
 	}()
 
-	go func(ctx context.Context) { // 这个协程控制停止信号
-		var cmd string
-		num, err := fmt.Scanf("%v", &cmd)
-		log.Println(num) // 获取输入的行数
-		if err != nil {
-			panic(err)
-		}
-		if cmd == "c" {
-			cancel()
-		}
-	}(ctx)
-
-	go func(ctx context.Context) { // 这个协程无限打印
-		for range time.Tick(time.Second) {
-			select {
+	i := 0
+	for i <= 10 {
+		go func(ctx context.Context, index int) {
+			for {
+				time.Sleep(time.Second)
+				select {
 				case <-ctx.Done():
-					log.Println("收到取消信号, 停止输出")
+					fmt.Println()
+					log.Println(strconv.Itoa(index) + "收到停止信号")
 					return
-			default:
-				log.Println("ping...")
+				default:
+					log.Println("我是第" + strconv.Itoa(index) + "个协程")
+				}
 			}
-		}
-	}(ctx)
+		}(ctx, i)
+		i += 1
+	}
+
+	time.Sleep(time.Second)
+	cancel()
+
+	select {}
 }
 
-func contextWithValue (ctxBackground context.Context) {
+func contextWithValue(ctxBackground context.Context) {
 	data := map[string]interface{}{
 		"name": "llf",
-		"age": 33,
+		"age":  33,
 	}
 	ctx := context.WithValue(ctxBackground, "key", data)
 
@@ -61,7 +61,7 @@ func contextWithTimeoutAutoCancel(ctxBackground context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Println("超时时间到, 收到done信号: ", ctx.Err())
-			return     // todo 不写return, 当前goroutine不会退出
+			return // todo 不写return, 当前goroutine不会退出
 		default:
 			log.Println()
 		}
@@ -77,7 +77,7 @@ func contextWithTimeoutHandCancel(ctxBackground context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Println("由于手动cancel, 提前收到done信号: ", ctx.Err())
-			return    // todo 这里写不写return有啥区别??
+			return // todo 这里写不写return有啥区别??
 
 		default:
 			log.Println("curr times : ", i)
@@ -96,26 +96,24 @@ func main() {
 	fmt.Println(ctxBackground, ctxTodo, "两者互为别名, 区别不大")
 
 	/**
-		withCancel的应用场景, 适用于在多个goroutine同时工作的时候, 由他们的父协程来控制取消
-	 */
+	withCancel的应用场景, 适用于在多个goroutine同时工作的时候, 由他们的父协程来控制取消
+	*/
 	go contextWithCancel(ctxBackground)
 
 	/**
-		withValue的应用场景, 适用于上下文之间传递参数,
-		但不要传递关键参数, 一般就是签名, logID 之类的参数,
-		传递的数据, 键 和 值 都是interface{}类型, 类型断言时, 记得保证程序的健壮性
-	 */
+	withValue的应用场景, 适用于上下文之间传递参数,
+	但不要传递关键参数, 一般就是签名, logID 之类的参数,
+	传递的数据, 键 和 值 都是interface{}类型, 类型断言时, 记得保证程序的健壮性
+	*/
 	go contextWithValue(ctxBackground)
 
-
 	/**
-		withTimeout的应用场景, 适用于超时之后自动取消当前正在执行的某些操作
-	 */
+	withTimeout的应用场景, 适用于超时之后自动取消当前正在执行的某些操作
+	*/
 	go contextWithTimeoutAutoCancel(ctxBackground)
 
-
 	/**
-		withTimeout的应用场景, 适用于未过超时时间, 手动取消执行
+	withTimeout的应用场景, 适用于未过超时时间, 手动取消执行
 	*/
 	go contextWithTimeoutHandCancel(ctxBackground)
 

@@ -6,11 +6,41 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func BuildQueryParams(req *http.Request, params map[string]string) (*http.Request, error) {
+	q := req.URL.Query()
+	for k, v := range params {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
+	return req, nil
+}
+
+func BuildHeader(req *http.Request) (*http.Request, error) {
+	header := map[string]string{
+		"Host":                      "www.haisirui.xin",
+		"Upgrade-Insecure-Requests": "1",
+		"User-Agent":                "Mozilla/5.0 (Linux; Android 9; MI 8 Build/PKQ1.180729.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/72.0.3626.121 Mobile Safari/537.36",
+		"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+		"x-requested-with":          "XBrowser",
+		"Accept-Encoding":           "gzip, deflate",
+		"Accept-Language":           "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+		"Connection":                "keep-alive",
+		"Origin":                    "http://www.haisirui.xin",
+		"Referer":                   "http://www.haisirui.xin/index/apprentice",
+	}
+	for k, v := range header {
+		req.Header.Set(k, v)
+	}
+	return req, nil
+}
+
 
 func GetMd5(str string) string {
 	data := []byte(str)
