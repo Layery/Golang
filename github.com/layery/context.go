@@ -26,7 +26,7 @@ func contextWithCancel(ctxBackground context.Context) {
 				case <-ctx.Done():
 					fmt.Println()
 					log.Println(strconv.Itoa(index) + "收到停止信号")
-					return
+					return // todo 这里如果不return, 当前这个子协程将不会自动退出, 它会一直能接收到停止信号
 				default:
 					log.Println("我是第" + strconv.Itoa(index) + "个协程")
 				}
@@ -35,7 +35,7 @@ func contextWithCancel(ctxBackground context.Context) {
 		i += 1
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 	cancel()
 
 	select {}

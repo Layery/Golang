@@ -126,14 +126,14 @@ func recMsgOnClosedChannel() {
 
 func main() {
 
-	// go baseChannel() // 基本使用
+	go baseChannel() // 基本使用
 
-	// go sendMsgWhenChannelClosed() // 当有缓冲通道关闭后, 再向其发送消息, 将会收到一个panic
+	go sendMsgWhenChannelClosed() // 当有缓冲通道关闭后, 再向其发送消息, 将会收到一个panic
 
 	go recMsgOnClosedChannel() // 从一个已关闭的有缓冲通道中接收消息
 
+	// 另一种阻塞代码的方式
 	ch := make(chan struct{})
-
 	<-ch
 
 }
