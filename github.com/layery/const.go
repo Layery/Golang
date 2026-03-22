@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 )
 
 // 常量的声明, 和PHP类似
@@ -21,13 +22,18 @@ const (
 **/
 func studyIota() {
 	const (
-		a, b = iota + 1, iota + 2
-		c, d = iota + 1, iota + 2
-		e, f
-		g, h = iota + 1, iota + 2
+		a = iota
+		b
+		c
+		d, e = iota + 1, iota + 2
 	)
+	fmt.Println("======================")
+	fmt.Println(a, b, c, d, e)
 
-	fmt.Println(a, b, c, d, e, f, g, h)
+	// 通过反射获取变量类型, 以及变量类型的所占用的字节数
+	typeInfo := reflect.TypeOf(a)
+	fmt.Printf("变量类型是: %s, 占用字节数是: %d", typeInfo.Name(), typeInfo.Size())
+
 }
 
 /**

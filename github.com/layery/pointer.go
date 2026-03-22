@@ -30,7 +30,7 @@ func main() {
 	这个函数中, 首先声明了一个变量a是一个指针, 由于a根本就没有值, 所以计算机根本没有给这个变量开辟一块内存空间
 	所以当再执行*a = 100 , 给地址的值重新赋值的时候, 根本找不到这个地址, 所以会报错
 	**/
-	//test()
+	test_point()
 
 	// 上述例子如何修复它的问题呢? 引入了两个关键字 new 和 make
 
@@ -39,18 +39,23 @@ func main() {
 	newInt := new(int)
 	fmt.Println("%T", &newInt)
 
-	// 2. make 只能用于开辟 slicn, map, chan 类型的空间
-
-	var b = map[string]int
-	fmt.Println(b)
-	// b = make(map[string]int, 10)
+	// 2. make 只能用于开辟 slice, map, chan 类型的空间
+	var b = make(map[string]int)
+	fmt.Printf("%#v \n", b)
+	b = make(map[string]int, 10)
+	fmt.Printf("%#v \n", b)
 
 	// fmt.Println("%T", b)
 
 }
 
-func test() {
-	var a *int
-	*a = 100
+func test_point() {
+	defer func() {
+		err := recover()
+		fmt.Println(err)
+	}()
+	var a *int // 声明了一个指针类型的变量, 但是没有给这个变量赋值, 所以这个变量是没有地址的
+	*a = 100   // 给这个地址赋值, 由于这个地址是没有的, 所以会报错
+
 	fmt.Println(a)
 }

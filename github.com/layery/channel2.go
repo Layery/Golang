@@ -2,18 +2,18 @@ package main
 
 import (
 	"fmt"
+	"github.com/gookit/goutil/dump"
+
 	//"net/http"
 	_ "net/http/pprof"
 	"time"
 )
 
-
-
-func testChan1 () {
+func testChan1() {
 	/**
 		通道使用make语法来创建, 如下:
 		关键字chan后边定义的类型, 代表该通道将用来存储何种类型的数据
-		make函数默认创建出来的通道是无缓冲通道, 无缓冲 channel 在同步发送和接收操作。 即使使用并发，通信也是同步的。
+		make函数默认创建出来的通道是无缓冲通道, 无缓冲 channel 是同步发送和接收操作。 即使使用并发，通信也是同步的。
 
 		如果想创建有缓冲的channel, 可以在make函数的第2个参数, 设置为通道的缓冲大小, 如下所示
 	   当 channel 已满时，任何发送操作都将等待，直到有空间保存数据。
@@ -22,7 +22,7 @@ func testChan1 () {
 	size := 2
 	ch := make(chan string, size)
 	send(ch, "one")
-	send(ch, "two")  // 至此, 主协程已经将ch容量占满,
+	send(ch, "two")           // 至此, 主协程已经将ch容量占满,
 	go send(ch, "子协程: three") // 这两个子协程虽然在往里send数据, 只是没有send进去
 	go send(ch, "子协程: four")
 
@@ -32,7 +32,7 @@ func testChan1 () {
 	// 所以它们两个可以往ch里塞数据了
 	// 所以这个for循环里, 可以将4条数据都读取出来
 	time.Sleep(time.Second * 3) // 主协程睡10秒
-	for i := 0; i < len(ch) ; i ++ {
+	for i := 0; i < len(ch); i++ {
 		fmt.Println("for 读取 => " + <-ch)
 	}
 	time.Sleep(time.Second * 3)
@@ -40,49 +40,67 @@ func testChan1 () {
 	fmt.Println()
 	fmt.Println()
 
-	for i := 0; i < len(ch) ; i ++ {
+	for i := 0; i < len(ch); i++ {
 		fmt.Println("for 读取 => " + <-ch)
 	}
 
 }
 
-
 func testChan2() {
-	ch := make(chan int)
-	go func(ch chan<- int, x int) {
-		time.Sleep(time.Second)
-		<-ch
-	}(ch, 3)
+	ch := make(chan struct{})
+
+	go func(ch chan struct{}) {
+		time.Sleep(time.Second * 2)
+		status := false
+		if status {
+			ch <- struct{}{}
+			fmt.Println("写入完毕")
+			close(ch)
+			fmt.Println("关闭chan")
+		} else {
+			close(ch)
+			fmt.Println("没写, 直接关闭")
+		}
+	}(ch)
+
+	go func(ch chan struct{}) {
+		// 等待5秒后, 读取这个ch, 确保关闭后, 我才开始读
+		time.Sleep(time.Second * 5)
+		fmt.Println("开始读取ch")
+		res, ok := <-ch
+		dump.P(res, ok)
+	}(ch)
 }
 
 /**
-	channel 是goroutine之间, 相互通信的桥梁, 可以在各个goroutine之间收发消息
-	通道的特性:
-		1. 同一时刻, 只能有一个goroutine对通道进行读写操作,
-		2. 通道内的消息, 遵循先入先出的队列特征(保证收发消息的顺序)
-		3. 通道类型的空值是nil , 使用make函数创建一个通道
+channel 是goroutine之间, 相互通信的桥梁, 可以在各个goroutine之间收发消息
+通道的特性:
+	1. 同一时刻, 只能有一个goroutine对通道进行读写操作,
+	2. 通道内的消息, 遵循先入先出的队列特征(保证收发消息的顺序)
+	3. 通道类型的空值是nil , 使用make函数创建一个通道
 
-	使用无缓冲通道接收数据: <== 注意是无缓冲通道
-		1. 通道内数据的收发, 在两个不同的goroutine之间进行(由于通道内的数据在没有接收方处理时, 发送方将一直保持阻塞状态, 故:无法在同一个goroutine内同时收发)
-		2. 接收方将持续阻塞, 直到发送方发送数据(接收方接收时, 如果通道内没有发送方发送的数据, 接收方也会持续阻塞)
-		3. 通道内一次只能接收一个数据元素
+使用无缓冲通道接收数据: <== 注意是无缓冲通道
+	1. 通道内数据的收发, 在两个不同的goroutine之间进行(由于通道内的数据在没有接收方处理时, 发送方将一直保持阻塞状态, 故:无法在同一个goroutine内同时收发)
+	2. 接收方将持续阻塞, 直到发送方发送数据(接收方接收时, 如果通道内没有发送方发送的数据, 接收方也会持续阻塞)
+	3. 通道内一次只能接收一个数据元素
 
-	使用有缓冲通道收发数据: <-- 注意是有缓冲通道
-		1. 给有缓冲通道发送数据, 发送长度满了之后, 将持续阻塞, 直到有其他goroutine从该通道内读取出数据来
-		2. 从有缓冲通道接收数据, 如果读取的长度达到设定的长度之后, 仍继续读取, 将会持续阻塞, 直到有其他goroutine写入数据至该通道内
+使用有缓冲通道收发数据: <-- 注意是有缓冲通道
+	1. 给有缓冲通道发送数据, 发送长度满了之后, 将持续阻塞, 直到有其他goroutine从该通道内读取出数据来
+	2. 从有缓冲通道接收数据, 如果读取的长度达到设定的长度之后, 仍继续读取, 将会持续阻塞, 直到有其他goroutine写入数据至该通道内
 
 todo 需要强调的是，通道并不提供跨 goroutine 的数据访问保护机制。如果通过通道传输数据的
-    一份副本，那么每个 goroutine 都持有一份副本，各自对自己的副本做修改是安全的。当传输的
+	一份副本，那么每个 goroutine 都持有一份副本，各自对自己的副本做修改是安全的。当传输的
 	是指向数据的指针时，如果读和写是由不同的 goroutine 完成的，每个 goroutine 依旧需要额外的
 	同步动作。
- */
+*/
 func main() {
 
 	//go testChan1()
 
+	// 测试从一个已经关闭的无缓冲的channel读取数据, 会发生什么
 	go testChan2()
 	for {
-		select {}
+		time.Sleep(time.Second)
 	}
 
 }

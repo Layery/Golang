@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sync"
 	"net/http"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -51,7 +51,6 @@ func SayGreetings(greeting string, times, label int, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-
 func main() {
 	log.Println("begin")
 	myTestFunc7()
@@ -85,7 +84,7 @@ func getApi(api string, ch chan Result, wg *sync.WaitGroup, timeout time.Duratio
 	}
 	select {
 	case <-ctx.Done(): // 单个api超时
-			res.Desc = "error: api is timeout, api: " + api
+		res.Desc = "error: api响应超时, api: " + api
 	default:
 		if err != nil {
 			res.Desc = "error: api响应异常, api: " + api
@@ -121,15 +120,14 @@ func myTestFunc7() {
 
 	for _, api := range apis {
 		wg.Add(1)
-		go getApi(api, ch, &wg, time.Second * 1) // 单个api 1秒后超时
+		go getApi(api, ch, &wg, time.Second*1) // 单个api 1秒后超时
 	}
 	wg.Wait()
 
-	for resp := range ch{
+	for resp := range ch {
 		log.Println(resp)
 	}
 }
-
 
 //func myTestFunc6() {
 //	start := time.Now()

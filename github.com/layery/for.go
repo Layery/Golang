@@ -58,16 +58,23 @@ func main() {
 	}()
 
 	for i := 0; i < len(arr); i++ {
-		msg := fmt.Sprintf("对于数组, 我们是同一个内存地址: %v, 但是值却每次都不一样: %v", &arr[i], arr[i])
+		msg := fmt.Sprintf("对于数组, arr[i]的内存地址: %v不同, 每次遍历arr[i]的值: %v也不同", &arr[i], arr[i])
 		fmt.Println(msg)
+	}
 
+	fmt.Println("\n接下来看看for range 遍历数组的情况")
+
+	for ri, rv := range arr {
+		msg := fmt.Sprintf("for range 遍历数组 %#v(%v) => %#v(%v)", ri, &ri, rv, &rv)
+		fmt.Println(msg)
 	}
 
 	fmt.Println()
-	var myslice = []int{1, 2, 3}
+	fmt.Println()
 
+	var myslice = []int{1, 2, 3}
 	for i := 0; i < len(myslice); i++ {
-		msg := fmt.Sprintf("对于切片, 我们是同一个内存地址: %v, 但是值却每次都不一样: %v", &i, i)
+		msg := fmt.Sprintf("for循环中, 对于切片, 不是同一个地址: %v, 值也不同: %v", &myslice[i], myslice[i])
 		fmt.Println(msg)
 	}
 
@@ -75,7 +82,7 @@ func main() {
 
 	for i := 0; i < len(myslice); i++ {
 		defer func() {
-			msg := fmt.Sprintf("我们是同一个内存地址: %v, 但是值却每次都一样: %v", &i, i)
+			msg := fmt.Sprintf("我们是同一个内存地址: %v, 值每次都一样: %v", &i, i)
 			fmt.Println(msg)
 		}()
 	}

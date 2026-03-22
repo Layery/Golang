@@ -31,7 +31,7 @@ func newPerson(name string, age int8) *Person {
 
 // 2. 为刚刚创建的Person类型的结构体, 定义一个方法
 //    方法里有两个传参, 第二个是接收者的类型, 第一个是接收者类型的首字母简写(约定成俗)
-func (p Person) Say() {
+func (p *Person) Say() {
 	// fmt.Printf("%s %d", p.name+" 今年"+p.age+"岁了")
 	fmt.Printf("hello my name is %s \n", p.name)
 }
@@ -47,10 +47,10 @@ func (p *Person) Hello(name string) {
 	2. 接受者是一个比较大的对象, 拷贝它会比较消耗资源, 但是拷贝指针代价就小很多
 	3. 保证一致性, 如果接收者的某一个方法使用了指针传参, 则为了保证一致性, 其他的方法也要使用指针传参
 */
-func (p *Person) SetName(name string) *Person {
+func (p *Person) SetName(name string) Person {
 	p.name = name
 	fmt.Println("now person's name is " + p.name)
-	return p
+	return *p
 }
 
 func main() {

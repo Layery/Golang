@@ -55,16 +55,19 @@ func test2(ch chan int) {
 
 	fmt.Println("start")
 	ch <- 222
-	fmt.Println("能写入吗? ")
+	fmt.Println("写入完毕")
 }
 func main() {
 
-	var ch = make(chan int)
+	var ch = make(chan int, 1)
 	// go test1()
 
 	go test2(ch)
 
 	go func(ch chan int) {
+		// 延时3秒
+		time.Sleep(time.Duration(3) * time.Second)
+
 		rs := <-ch
 
 		fmt.Println("res : ", rs)
@@ -72,5 +75,4 @@ func main() {
 	}(ch)
 
 	select {}
-
 }

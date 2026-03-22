@@ -13,15 +13,16 @@ Golang 中结构体字段的可见性 && json序列化
 type Person struct {
 	Name    string
 	age     int8
-	Address string `json:"local, int"`    // 表示用local代替原始的Address的字段名
-	sex     int8   `json:-`               // 表示对该字段不进行序列化
+	Address string `json:"local, int"` // 表示用local代替原始的Address的字段名
+	sex     int8   `json:-`            // 表示对该字段不进行序列化
 	// omitempty是忽略该字段所有空值的场景
-	Email   string `json:email,omitempty` // 由于Go中字段首字母大写, 代表外部可访问的变量, 也可以是使用json TAG 更加定制化的生成json格式数据
+	Email string `json:email,omitempty` // 由于Go中字段首字母大写, 代表外部可访问的变量, 也可以是使用json TAG 更加定制化的生成json格式数据
 }
 
 /**
 Golang中, 如果定义的标识符是首字母大写的, 那么就是对外可见的, 可以理解为PHP中类成员方法所具有的public属性,
-Golang中, 没有额外的关键字, 通过首字母大写, 即可对外可见, 首字母小写即只对当前这个包内可见
+Golang中, 没有额外的关键字例如PHP中的public/private/protected这些,
+通过首字母大写, 即可对外可见, 首字母小写即只对当前这个包内可见
 */
 
 // 如下所示, 声明了一个student, 类型是Person, 那么该类型就只是对当前包内可见的

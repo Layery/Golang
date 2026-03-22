@@ -56,16 +56,32 @@ func filter(slice []int, f FuncTypeInt) []int {
 	return result
 }
 
+func console_log(params ...interface{}) {
+	fmt.Println("参数个数: ", len(params))
+	for _, v := range params {
+		fmt.Println(v)
+	}
+}
+
+func foo(params int) int {
+	foo_val := 11
+	return foo_val
+}
+
+type structKey struct {
+	aaa string
+}
+
 func main() {
 	// go的匿名函数
 
-	sum, _ := add(3, 4)
+	sum, div := add(3, 4)
 
-	fmt.Printf("%v \n", sum)
+	fmt.Printf("%v, %v \n", sum, div)
 
 	// defer 语句会在程序都执行完后开始执行
 	for i := 0; i < 5; i++ {
-		defer fmt.Printf("使用了defer之后, 打印顺序变成了倒序了: %d \n", i)
+		// defer fmt.Printf("使用了defer之后, 打印顺序变成了倒序了: %d \n", i)
 		fmt.Printf("不使用defer时, 打印顺序就是正序的: %d \n", i)
 	}
 	// 由于使用了...的语法, 该函数支持多个参数
@@ -73,9 +89,8 @@ func main() {
 	fmt.Println(rs)
 
 	var array = [11]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-
 	slice := array[:5]
-	fmt.Printf("type is %T, <====> value is %v \n", slice, slice)
+	fmt.Printf("type is %T, <====> value is %v \n\n", slice, slice)
 
 	// 将函数, 作为参数传到filter函数中, 则 传入的函数参数将会在内部执行, 类似于PHP的array_map函数的用法
 	odd := filter(slice, isOdd)
@@ -83,4 +98,21 @@ func main() {
 	fmt.Printf("切片内的值是: %v, 其中的奇数: %#v\n", slice, odd)
 	fmt.Printf("切片内的值是: %v, 其中的偶数: %#v\n", slice, filter(slice, isEven))
 
+	fmt.Println()
+	fmt.Println()
+	fmt.Println("golang 的逃逸现象? 究竟什么才叫变量逃逸??")
+
+	main_val := foo(666)
+	_ = main_val
+
+	struct_key := structKey{
+		aaa: "llf",
+	}
+	my_map := map[interface{}]interface{}{
+		"aa": 222,
+		333:  "ccc",
+		// []byte{1, 2, 'c'}: 'u',
+		struct_key: 'c',
+	}
+	fmt.Println(my_map)
 }
