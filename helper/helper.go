@@ -1,13 +1,15 @@
 package helper
 
-import "fmt"
-import "github.com/astaxie/beego"
+import (
+	"fmt"
 
-func LogWriter(data interface{})  {
+	"github.com/astaxie/beego"
+)
+
+func LogWriter(data interface{}) {
 	fmt.Printf("%v", data)
 }
 
-
-func main(){
+func main() {
 	beego.Run()
 }

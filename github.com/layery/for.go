@@ -28,6 +28,7 @@ func fixForFuncType2() {
 }
 
 func init() {
+	// 在线执行1.21版本代码:  https://www.online-compiler.com/compiler/go
 	fmt.Printf("当前golang版本: %v \n\n", runtime.Version())
 }
 
@@ -99,8 +100,9 @@ func main() {
 	defer func() {
 		msg := `
 	这是在学习 Go 程序设计 中遇到的一个比较重要的一个警告。这是个 Go 语言的词法作用域规则的陷阱。
-1. 1.22版本之前的for循环中, key的值始终是在同一个内存地址上重新赋值
-2. 函数调用中, 参数始终是值拷贝, 除非显式使用值引用传参
+1. 1.22版本之前的for循环中, key的值始终是在同一个内存地址上重新赋值, value的值则是在不同的内存地址上
+2. 1.22版本之前的for range, key 和 value 每次遍历都是在各自相同的内存地址上赋值, golang >= 1.22版本之后, 修复了这个问题
+3. 函数调用中, 参数始终是值拷贝, 除非显式使用值引用传参
 `
 		fmt.Println(msg)
 	}()
