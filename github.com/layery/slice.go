@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"crypto/md5"
+	"encoding/hex"
 
 	"github.com/gookit/goutil/dump"
 )
@@ -23,6 +25,17 @@ func ArraySearch(needle interface{}, hystack interface{}) (index int) {
 }
 
 func main() {
+
+
+	s := "_client_type=2_client_version=12.81.0.0click_id=83fa249a315599c78679e3f889a40442forumName=原神kw=原神personalizedRecSwitch=1personalized_rec_switch=1shoubai_version=15.56.0.0source=dibar_tiebasubapp_type=shoubai_ugc0039d79dc3cc2075129745a30237a3c4"
+	hash := md5.Sum([]byte(s))
+	md5 := hex.EncodeToString(hash[:])
+	fmt.Println(md5)
+
+	fmt.Println("hello")
+
+	return
+
 	// 切片的定义, 类似于数组, 只是不需要定义数组的长度了
 
 	var slice1 []string
@@ -45,6 +58,7 @@ func main() {
 	// slice 默认从0开始slice[:3] 等价于 slice[0:3]
 	// slice[3:] 等价于 slice[3: len(array)]
 	// slice[:] 等价于 slice[0: len(array)]       <====  这个写法好特么奇葩
+
 	slice4slice := slice4array[:2]
 	fmt.Printf("sliec4array: %v, sliec4slice: %v \n", slice4array, slice4slice)
 
@@ -137,7 +151,7 @@ func main() {
 	for i := 0; i < 10; i++ {
 		a = append(a, fmt.Sprintf("%v", i)) // 这一步再扩容, 等于是在5个空字符串的基础上, 拼接了0-9
 	}
-	fmt.Printf("%#v \n\n", a) // 输出: "     0123456789"
+	fmt.Printf("%#v \n\n", a) // 输出: "     0123456789", 注意! 最开始输出的是几个空字符串
 	/*********************   以上是一道面试题  ************************/
 
 	/**
