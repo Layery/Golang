@@ -97,14 +97,11 @@ func anonymityLock() {
 	cnt := counter{num: 0}
 	var wg sync.WaitGroup
 	for i := 1; i <= 100; i++ { // go1.22之后,for循环每次都是迭代新的变量i
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			cnt.Lock()
 			defer cnt.Unlock()
-			fmt.Println(i)
 			cnt.num += i
-		}()
+		})
 	}
 	wg.Wait()
 	dump.P(cnt)
