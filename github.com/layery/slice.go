@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"reflect"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"reflect"
 
 	"github.com/gookit/goutil/dump"
 )
@@ -24,8 +24,23 @@ func ArraySearch(needle interface{}, hystack interface{}) (index int) {
 	return
 }
 
+func test() {
+	slice := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	list := make([]int, 0)
+	for _, v := range slice {
+		if v%2 == 0 {
+			list = append(list, v)
+		}
+	}
+
+	fmt.Println(list, "<---", len(list), cap(list))
+
+}
+
 func main() {
 
+	test()
 
 	s := "_client_type=2_client_version=12.81.0.0click_id=83fa249a315599c78679e3f889a40442forumName=原神kw=原神personalizedRecSwitch=1personalized_rec_switch=1shoubai_version=15.56.0.0source=dibar_tiebasubapp_type=shoubai_ugc0039d79dc3cc2075129745a30237a3c4"
 	hash := md5.Sum([]byte(s))
