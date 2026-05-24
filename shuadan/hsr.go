@@ -6,11 +6,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gookit/goutil/dump"
 
 	//"github.com/gookit/goutil/dump"
-	"golang.org/x/net/publicsuffix"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 const (
@@ -45,7 +46,6 @@ var noticeType = map[int]string{
 }
 
 var dataDir string
-
 
 var ApiListMap = map[string]string{
 	"login":         "http://www.haisirui.xin/index/Apprentice/getlogin.html",
@@ -94,14 +94,11 @@ const (
 	ERR_CODE_UNKNOW
 )
 
-
-
 type ErrorResp struct {
 	*Person
 	Code int
-	Msg string
+	Msg  string
 }
-
 
 // 自动识别当前程序运行路径
 func (p *Person) GetDataPath() string {
@@ -123,7 +120,6 @@ func (p *Person) IsLogin() *Person {
 		return p.Login()
 	}
 }
-
 
 func (p *Person) BeforeLogin(url string) *Person {
 	res, err := http.Get(url)
@@ -151,8 +147,6 @@ func (p *Person) BeforeLogin(url string) *Person {
 	}
 	return p
 }
-
-
 
 func (p *Person) Login() *Person {
 
@@ -198,8 +192,8 @@ func (p *Person) Login() *Person {
 	} else {
 		panic(ErrorResp{
 			Person: p,
-			Code: ERR_CODE_LOGIN_FALSE,
-			Msg: "登录失败",
+			Code:   ERR_CODE_LOGIN_FALSE,
+			Msg:    "登录失败",
 		})
 	}
 	return p
@@ -214,10 +208,6 @@ func (p *Person) WriteCookie(cookies []*http.Cookie) error {
 	}
 	return err
 }
-
-
-
-
 
 func (p *Person) runJob() {
 	// 构造请求的cookie
@@ -297,8 +287,8 @@ func (p *Person) PanicReLogin() {
 	_ = os.Remove(p.GetDataPath() + "cookies")
 	panic(ErrorResp{
 		Person: p,
-		Code: ERR_CODE_COOKIE_INVALID,
-		Msg: "cookie失效重登陆",
+		Code:   ERR_CODE_COOKIE_INVALID,
+		Msg:    "cookie失效重登陆",
 	})
 }
 
@@ -318,7 +308,6 @@ func getSign(time int64) string {
 	return utils.GetMd5(timeStr + API_SECRET)
 }
 
-
 // 程序无法自动登录, 发送通知后, die掉
 func (p *Person) NoticeMe(msgType int, jumpUrl, noticeTitle, content string, currPrice float64) bool {
 
@@ -335,7 +324,7 @@ func (p *Person) NoticeMe(msgType int, jumpUrl, noticeTitle, content string, cur
 		"jump_url": jumpUrl,
 		"content":  content,
 		//"who":      p.UserName,
-		"who":      "weidingyi",
+		"who": "weidingyi",
 	}
 
 	postParams, _ := json.Marshal(postMap)
@@ -352,7 +341,6 @@ func (p *Person) NoticeMe(msgType int, jumpUrl, noticeTitle, content string, cur
 	time.Sleep(time.Minute * 10)
 	return true
 }
-
 
 func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string, string) {
 	titleMap := map[string]string{
@@ -388,11 +376,10 @@ func (p *Person) GenerateNoticeContent(jobType, logName string) (float64, string
 
 	//_ = os.Remove(logName)
 
-	noticeTitle := "【"+ titleMap[jobType]+"】【" + price + "】【"+ keyword +"】"
+	noticeTitle := "【" + titleMap[jobType] + "】【" + price + "】【" + keyword + "】"
 
 	return priceFloat, noticeTitle, "类别: " + titleMap[jobType] + RN + "价格: " + price + RN + "关键词: " + keyword
 }
-
 
 func (p *Person) DoJob() *Person {
 
@@ -405,7 +392,6 @@ func (p *Person) DoJob() *Person {
 	}
 }
 
-
 func newPerson(userName, password string) *Person {
 	return &Person{
 		UserName:    userName,
@@ -414,13 +400,15 @@ func newPerson(userName, password string) *Person {
 	}
 }
 
-func run () {
+func run() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			dump.P(err)
-			errRet := err.(ErrorResp)
-
+			errRet, ok := err.(ErrorResp)
+			if !ok {
+				log.Fatalf("无法断言的类型, err: %v", err) // 这里其实是因为beforelogin方法请求失败了
+				return
+			}
 			switch errRet.Code {
 			case ERR_CODE_LOGIN_FALSE:
 				log.Fatal(errRet.UserName, errRet.Msg, "检查账号密码")
@@ -431,7 +419,7 @@ func run () {
 				errRet.Person.DoJob()
 			default:
 				log.Println("未知错误")
-				log.Fatal(errRet)
+				// log.Fatal(errRet)
 			}
 
 		}
