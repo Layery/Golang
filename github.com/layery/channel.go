@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -12,9 +11,9 @@ import (
 // 模拟一个执行缓慢的函数
 func slowFunc(s int, c chan string) {
 	fmt.Printf("sleep begin : %v \n", time.Now().Format("2006-01-02 15:04:05"))
-	msg := fmt.Sprintf("我是一个执行了%d秒的函数, 我刚刚执行完毕", s)
 	time.Sleep(time.Duration(s) * time.Second)
 	fmt.Printf("sleep end : %v \n", time.Now().Format("2006-01-02 15:04:05"))
+	msg := fmt.Sprintf("我是一个执行了%d秒的函数, 我刚刚执行完毕", s)
 	c <- msg
 }
 
@@ -51,10 +50,11 @@ func baseChannel() {
 
 	go slowFunc(3, chan1)
 
-	msg, ok := <-chan1 // 非阻塞接收数据
-	fmt.Printf("msg: %v, ok: %v \n", msg, ok)
-	fmt.Printf("我是主线程, 我刚刚执行完毕\n")
-	panic(errors.New("测试抛出一个panic"))
+	msg, ok := <-chan1 // 无缓冲channel, 在没有发送方发送数据之前, 这里将一直阻塞, 直到有数据发送过来
+	if ok {
+		fmt.Printf("收到消息: %s\n", msg)
+	}
+	// panic(errors.New("测试抛出一个panic"))
 }
 
 func sendMsgWhenChannelClosed() {
@@ -176,9 +176,9 @@ func testHowToUseReturnInForSelect() (int, bool) {
 }
 func main() {
 
-	//go baseChannel() // 基本使用
+	go baseChannel() // 基本使用
 
-	//go sendMsgWhenChannelClosed() // 当有缓冲通道关闭后, 再向其发送消息, 将会收到一个panic
+	// go sendMsgWhenChannelClosed() // 当有缓冲通道关闭后, 再向其发送消息, 将会收到一个panic
 
 	/**
 	有缓冲通道读取消息
@@ -187,9 +187,9 @@ func main() {
 		3. 当通道中有消息, 此时通道关闭, 此时不可写入消息, 读取将会读出内部消息, 继续读取将会读取chan中类型的零值,
 		4. 当通道中没有消息, 且通道没关闭, 此时会一直阻塞读取, 直到有消息写入
 	*/
-	go recMsgOnClosedChannel()
+	// go recMsgOnClosedChannel()
 
-	go transformDataByChannel() // 这里怎么验证数据在通道内传递, 是拷贝传递的呢? 比如把a发送给chan, 另一个goroutine在读取a时, 就是拷贝??
+	// go transformDataByChannel() // 这里怎么验证数据在通道内传递, 是拷贝传递的呢? 比如把a发送给chan, 另一个goroutine在读取a时, 就是拷贝??
 
 	/**
 	for 循环中的select 中的case里, 使用return, 相当于break掉for循环后直接return了
@@ -205,10 +205,10 @@ func main() {
 	// 测试一个有缓冲通道, 先阻塞读, 再关闭通道, 看发生什么(仍然是读取类型的零值)
 	//go readingACacheChannelOnclose()
 
-	for {
-		time.Sleep(time.Second) // 这里用来确保main不挂
-	}
-
+	// for {
+	// 	time.Sleep(time.Second) // 这里用来确保main不挂
+	// }
+	select {}
 }
 
 func readingACacheChannelOnclose() {
