@@ -435,6 +435,7 @@ func run() {
 
 func init() {
 	ptr := flag.String("path", ".", "set storage path")
+
 	flag.Parse()
 	dataDir = *ptr
 	if dataDir != "." {

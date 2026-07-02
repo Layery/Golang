@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/gookit/goutil/dump"
 	"log"
 	"time"
+
+	"github.com/gookit/goutil/dump"
 )
 
 // 模拟一个执行缓慢的函数
