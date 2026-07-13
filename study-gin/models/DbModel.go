@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	DB *gorm.DB
+	DB       *gorm.DB
 	dbreader *gorm.DB
 	err      error
 )
@@ -24,7 +24,7 @@ func InitDb() {
 		"root",
 		"127.0.0.1",
 		"3306",
-		"fastadmin",
+		"skill_study",
 		"utf8mb4",
 	)
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/gookit/goutil/dump"
 	"sync"
+
+	"github.com/gookit/goutil/dump"
 )
 
 type Goods struct {

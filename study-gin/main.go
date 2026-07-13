@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"study-gin/models"
 	"study-gin/routers"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -15,10 +16,8 @@ func main() {
 	// 可以通过代码设置工作模式
 	gin.SetMode("debug") // debug, release, test
 
-
 	// 初始化db联接
 	model.InitDb()
-
 
 	// 初始化后台路由
 	routers.InitAdminRouter()

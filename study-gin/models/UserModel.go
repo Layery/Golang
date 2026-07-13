@@ -29,8 +29,6 @@ type UserModel struct {
 }
 type User UserModel
 
-
-
 func (u *User) GetUserList() interface{} {
 	// 通过扩展user, 来增加一个反给前端的临时字段Address,(这个字段在数据库是不存在的)
 	// 这个扩展只需将User作为tempUser的匿名字段即可, 方便后续处理

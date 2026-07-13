@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -36,7 +37,7 @@ func testSlice1() {
 	var slice3 = make([]int, 5)
 	fmt.Printf("slice3 len: %v, cap: %v \n", len(slice3), cap(slice3))
 
-	// 切片底层的那个指针，指向的就是切片当前视窗里的第一个元素在内存中的地址
+	// 切片底层数组的那个指针，指向的就是切片当前视窗里的第一个元素在内存中的地址
 	fmt.Printf("slice1 的指针: %p, slice1的1号元素的指针: %p \n", slice1, &slice1[0])
 
 	// 当切片发生截取时
@@ -113,7 +114,7 @@ func demoMultiDimensionSlice() {
 // 输出: 无
 func demoSliceAppend(multiSlice [][]int) {
 	// append函数可以为切片增加单元
-	currSlice := make([]int, 0, 0)
+	currSlice := make([][]int, 0, 0)
 	for i, v := range multiSlice {
 		fmt.Println(v)
 		currSlice := append(v, i)
@@ -121,7 +122,7 @@ func demoSliceAppend(multiSlice [][]int) {
 	}
 	fmt.Println(currSlice)
 	// append也可以直接将一个切片追加到另一个切片中
-	nowSlice := append(currSlice, slice4slice...)
+	nowSlice := append(currSlice, multiSlice...)
 
 	fmt.Println("append也可以直接将一个切片追加到另一个切片中, 这个...的语法也好奇葩(代表将元素从切片中拆分出来, 然后全部追加到指定slince)", nowSlice)
 }
@@ -132,8 +133,8 @@ func demoSliceAppend(multiSlice [][]int) {
 func demoSliceDelete() {
 	// 切片的删除
 	// 想删除某个目标, 就把目标的索引之前的切出来, 同时追加上它之后的切片, 这样就变相的删除了指定的切片 <== 好变态啊赶脚, PHP果然是最好的语言
-	newSlice := []string{"北京", "上海", "天津", "重庆"}
-	del := append(newSlice[:2], newSlice[3:]...)
+	newSlice := []string{"北京", "上海", "天津", "重庆", "深州", "广州"}
+	del := append(newSlice[:2], newSlice[4:]...)
 	fmt.Println(del)
 }
 
@@ -144,7 +145,7 @@ func demoMapSlice() {
 	// 元素类型为map的切片, make函数此时只完成了切片的初始化, map里的它并没有初始化, 还是nil
 	var mapSlice = make([]map[string]int, 8, 8)
 
-	// 还需要完成内部map的初始化
+	// 还需要完成内部map的初始化   <--- 这种写法非常蛋疼, 标准的写法, 是定义一个结构体存放映射数据, 然后切片的元素是该结构体
 	mapSlice[0] = make(map[string]int, 8)
 	mapSlice[0]["zhangsan"] = 30
 	dump.Print(mapSlice)
@@ -163,6 +164,19 @@ func demoMapSlice() {
 
 	fmt.Println()
 	fmt.Println()
+
+	// 元素类型为结构体的切片
+	type student struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+	studentList := make([]student, 0, 10)
+
+	for i := 0; i < 10; i++ {
+		studentList = append(studentList, student{Name: fmt.Sprintf("student_%d", i), Age: 18 + i})
+	}
+	jsonStr, _ := json.MarshalIndent(studentList, "", "  ")
+	fmt.Println(string(jsonStr))
 }
 
 // demoSliceCompare 演示切片比较与面试题
@@ -179,10 +193,9 @@ func demoSliceCompare() {
 	myslice2 := []int{}
 	myslice3 := make([]int, 0)
 
-	fmt.Printf("%#v \n", myslice1)
-
-	fmt.Printf("%#v \n", myslice2)
-	fmt.Printf("%#v \n", myslice3)
+	fmt.Printf("myslice1: %#v \n", myslice1)
+	fmt.Printf("myslice2: %#v \n", myslice2)
+	fmt.Printf("myslice3: %#v \n", myslice3)
 
 	/*********************   以下是一道面试题  ************************/
 	var a = make([]string, 5) // 这里已经初始化切片了, 并且用字符串的零值来填充这个切片了
@@ -239,12 +252,100 @@ func demoSliceCopy() {
 	_ = s2
 }
 
+// 这个测试, 验证了多个切片的底层指向的同一个数组指针, 当不发生扩容的情况下, 修改其中一个切片的数据,
+// 将会影响到其它切片和底层数据, 当发生扩容后, 由于扩容后开辟了新的内存地址, 则只影响当前切片
+func testSlice2() {
+	var slice = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	fmt.Printf("slice: %v , len: %v, cap: %v\n", slice, len(slice), cap(slice))
+
+	slice1 := slice[2:5]
+	fmt.Printf("slice1:    %v , len: %v, cap: %v\n", slice1, len(slice1), cap(slice1))
+
+	slice2 := slice1[2:6:7]
+	fmt.Printf("slice2:        %v , len: %v, cap: %v\n\n\n", slice2, len(slice2), cap(slice2))
+
+	slice2 = append(slice2, 100)
+	// slice2 = append(slice2, 200)
+	fmt.Printf("slice2 after append: %v , len: %v, cap: %v\n", slice2, len(slice2), cap(slice2))
+
+	fmt.Printf("slice: %v , len: %v, cap: %v\n", slice, len(slice), cap(slice))
+	fmt.Printf("slice1: %v , len: %v, cap: %v\n\n", slice1, len(slice1), cap(slice1))
+
+	slice1[2] = 300
+
+	fmt.Printf("slice: %v , len: %v, cap: %v\n", slice, len(slice), cap(slice))
+	fmt.Printf("slice1: %v , len: %v, cap: %v\n", slice1, len(slice1), cap(slice1))
+	fmt.Printf("slice2: %v , len: %v, cap: %v\n", slice2, len(slice2), cap(slice2))
+}
+
+func callFuncWithSlice(list []int) {
+	/*
+		切片的底层运行时, 是一个结构体, 包含指向底层数组的指针, 以及切片的len和cap
+		如下所示:
+			type slice struct {
+				array unsafe.Pointer
+				len   int
+				cap   int
+			}
+
+		golang中的函数入参, 默认都是值拷贝, 也就是传递的这个runtime.slice结构体本身
+
+		1. 切片内元素是值类型时:
+			a. 函数内部对于该切片修改且没有发生扩容时, 函数外部的切片也会受到影响
+			b. 修改导致发生扩容了, 则函数外部的切片不受影响; 这里又区分为扩容之前的修改, 和扩容之后的修改
+			   本质上都是扩容后的修改不影响原始函数外层切片
+	*/
+
+	list = append(list, 2, 3)
+	list[0] = 22
+
+	// 为什么要打印0号元素的指针? 因为切片底层数组的指针, 指向的就是切片可见范围元素的初始位置
+	fmt.Printf("func: callFuncWithSlice, 函数内部切片的值: %#v, ptr: %p, idx-0-ptr: %p\n", list, &list, &list[0])
+}
+
+func callFuncWithSlicePointer(list *[]int) {
+
+	(*list)[0] = 111
+
+	fmt.Printf("func: callFuncWithSlicePointer, 函数内部切片的值: %#v, ptr: %p, idx-0-ptr: %p\n", list, list, &(*list)[0])
+}
+
 func main() {
+
+	var arr = make([]int, 2, 3)
+
+	// 函数调用, 传递切片和传递切片指针的区别
+	// callFuncWithSlice(arr) // 传切片本身
+
+	callFuncWithSlicePointer(&arr) // 传切片指针
+
+	fmt.Printf("函数外层切片的值: %#v, ptr: %p, idx-0-ptr: %p\n", arr, &arr, &arr[0])
+
+	return
+
+	// 切片对底层数组的影响
+	testSlice2()
+
+	// 切片类型满足一个伪零值可用, 当我们只声明, 不初始化, 而直接append一个元素时,
+	// 这个切片会自动初始化, 并且底层的数组容量是1, 这点和map不一样, map不支持零值可用
+	// 但是, 却不能直接使用slice1[0] = 1, 来赋值, 因为 slice1[0] = 1, 这个语法是直接寻址,
+	// 并且当前切片是len=0, slice1并没有初始化, 所以会报错
+	var slice1 []int
+	slice1 = append(slice1, 0)
+	fmt.Printf("slice1: %#v \n", slice1)
+
+	// map不支持零值可用, 所以当只是声明一个map类型的变量时, 这个map的零值是nil,
+	// 不能直接写操作, 必须先初始化, 否则会报panic
+	// 虽然不能直接写, 但却是能直接读, 哪怕读一个不存在的key, 也不会报错, 只会返回该类型的零值
+	var map1 map[int]bool
+	// map1 = make(map[int]string, 10)
+	// map1[1] = "111"
+	fmt.Println(map1[4]) // 直接访问map的一个不存在的key, 会返回该类型的零值, 而不会报错
+	fmt.Printf("map1: %#v \n", map1)
 
 	// 切片的底层是一个数组, 无论这个数组你是否能直观的看到, 它的底层就是一个数组
 	// 切片本身的数据结构只有3个字段, 分别是: 指向底层数组的指针, 切片的长度, 切片的容量
 	testSlice1()
-	return
 
 	// 调用切片定义与基础操作演示
 	demoSliceDefinition()
