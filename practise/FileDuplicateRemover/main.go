@@ -94,8 +94,7 @@ type FileDuplicateRemover struct {
 	workerOutCh    chan FileInfo // 扇出ch
 	filePath       string
 	fileType       string
-	trashesPath    string // 临时回收站路径
-	totalScanFiles int64  // 扫描文件计数器
+	totalScanFiles int64 // 扫描文件计数器
 	ctx            context.Context
 	cancel         context.CancelFunc
 }
@@ -140,12 +139,12 @@ func FormatFileSize(bytes int64) string {
 	}
 
 	const unit = 1024
-	units := []string{"KB", "MB", "GB", "TB", "PB"}
+	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
 	val := float64(bytes)
 	i := 0
 
 	for val >= unit && i < len(units)-1 {
-		val /= unit * unit
+		val /= unit
 		i++
 	}
 
@@ -318,7 +317,6 @@ func NewFileDuplicateRemover(ctx context.Context, filePath, fileType string) *Fi
 		filePath:    filePath,
 		fileListCh:  make(chan string, 200),
 		workerOutCh: make(chan FileInfo),
-		trashesPath: FdrTrashesPath,
 	}
 }
 
@@ -414,20 +412,14 @@ func (f *FileDuplicateRemover) GoWork() {
 
 // 返回临时回收站的绝对路径, err
 func (f *FileDuplicateRemover) initTrashesDir() (string, error) {
+	// 使用局部变量，避免重复调用时不断拼接 f.trashesPath 导致路径错误叠加
+	trashPath := filepath.Join(FdrTrashesPath, f.fileType, time.Now().Format("20060102"))
 
-	date := time.Now().Format("20060102")
-	f.trashesPath = filepath.Join(f.trashesPath, f.fileType, date)
-
-	err := os.MkdirAll(f.trashesPath, 0777) // If path is already a directory, MkdirAll does nothing
-	if err != nil {
+	if err := os.MkdirAll(trashPath, 0777); err != nil { // If path is already a directory, MkdirAll does nothing
 		return "", err
 	}
 
-	absTrashPath, err := filepath.Abs(f.trashesPath)
-	if err != nil {
-		return "", err
-	}
-	return absTrashPath, nil
+	return filepath.Abs(trashPath)
 }
 
 func (f *FileDuplicateRemover) OperateDuplicateFile() {
@@ -452,7 +444,7 @@ func (f *FileDuplicateRemover) OperateDuplicateFile() {
 		msg += fmt.Sprintf("发现 %d 组重复文件", len(duplicateMap))
 		log.Println(msg)
 	} else {
-		msg += fmt.Sprintf("没有重复文件")
+		msg += fmt.Sprintln("没有重复文件")
 		log.Println(msg)
 		return
 	}
@@ -575,13 +567,13 @@ func main() {
 		return
 	}
 
-	// 扇出, 构造文件资源通道
+	// 构造文件资源通道
 	fdr.BuildFileResource()
 
-	// 扇入: 启动N个worker并发计算文件哈希
+	// 扇出: 启动N个worker并发计算文件哈希
 	fdr.GoWork()
 
-	// 交互式操作重复文件
+	// 扇入: 交互式操作重复文件
 	fdr.OperateDuplicateFile()
 	return
 }
