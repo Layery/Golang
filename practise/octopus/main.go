@@ -12,6 +12,7 @@ func main() {
 	// 创建
 	app := &cli.App{
 		Name:            "小章鱼",
+		Usage:           "不可以👀😍",
 		HideHelpCommand: true,
 		UsageText:       "octopus.exe [--proxy HOST:PORT] web -n NAME [-c CATEGORY] [-p PAGE]",
 		Flags: []cli.Flag{
